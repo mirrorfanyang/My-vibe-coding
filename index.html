@@ -163,10 +163,10 @@
     <script>
         // 🌟 初始化默认配置中，已经预留好了“📋 中介参考/户型图”专属列
         let dimensions = [
-            { id: 'agent_photos', name: '📋 中介参考/户型图', type: 'media', weight: 1 },
             { id: 'price', name: '月租金/预算', type: 'number', weight: 5, unit: '元' },
             { id: 'commute', name: '步行通勤时间', type: 'custom_value', weight: 4, unit: 'min' },
-            { id: 'photos', name: '📸 房间照片实景', type: 'media', weight: 1 },
+            { id: 'photos', name: '📋中介参考', type: 'media', weight: 1 },
+            { id: 'real_photos', name: '📸实拍照片', type: 'media', weight: 1 },
         ];
         let houses = [];
         let db, map, markers = {};
