@@ -384,6 +384,8 @@
                 animation: 150, 
                 handle: 'td:first-child font-bold', // 限制通过房源名字区域拖拽，防止干扰经纬度输入框选择
                 ghostClass: 'drag-ghost',
+                delay: 200,
+                delayOnTouchOnly: true,
                 onEnd: () => {
                     let reordered = [];
                     document.querySelectorAll('#houseMatrixBody tr').forEach(tr => {
@@ -399,6 +401,8 @@
                 animation: 150,
                 draggable: 'th[data-dim-id]', 
                 ghostClass: 'drag-ghost',
+                delay: 200,
+                delayOnTouchOnly: true,
                 onEnd: () => {
                     let reorderedDim = [];
                     document.querySelectorAll('#dimensionHeader th[data-dim-id]').forEach(th => {
