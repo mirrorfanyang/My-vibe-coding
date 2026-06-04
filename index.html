@@ -265,11 +265,12 @@
             reader.onload = function(e) {
                 try {
                     const backup = JSON.parse(e.target.result);
-                    // 更新当前内存变量
-                    dimensions = backup.dimensions;
-                    houses = backup.houses;
                     
-                    // 保存回 IndexedDB
+                    // 关键修改：只更新房源数据，不更新 dimensions！
+                    // 这样无论备份文件里是什么，都会保留你代码里写好的最新表头
+                    houses = backup.houses; 
+                    
+                    // 保存回 IndexedDB (此时保存的是新的 dimensions 和旧的房源数据)
                     saveData();
                     
                     alert('数据恢复成功！页面即将刷新。');
