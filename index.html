@@ -617,27 +617,38 @@
         function exportReadOnly() {
             const bodyClone = document.body.cloneNode(true);
             
-            const toRemove = bodyClone.querySelectorAll('button, input[type="file"], .drag-handle, i[data-lucide], .cursor-move');
+            const toRemove = bodyClone.querySelectorAll('button, input[type="file"], .drag-handle, i[data-lucide], .cursor-move, #map');
             toRemove.forEach(el => el.remove());
-
+            
             const inputs = bodyClone.querySelectorAll('input');
             inputs.forEach(input => {
                 const span = document.createElement('span');
                 span.textContent = input.value;
-                span.className = "text-xs text-[#4A4E69] font-medium";
+                span.className = "text-xs text-gray-700 font-medium";
                 input.parentNode.replaceChild(span, input);
             });
 
-            const scriptPart = '<scr' + 'ipt src="https://cdn.tailwindcss.com"></scr' + 'ipt>';
-            
             const htmlContent = `<!DOCTYPE html>
             <html lang="zh-CN">
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                ${scriptPart}
+                <title>房源预览</title>
+                <style>
+                    body { font-family: sans-serif; background: #F4F3EF; padding: 20px; color: #333; }
+                    .container { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    th { text-align: left; font-size: 12px; color: #666; padding: 10px; border-bottom: 2px solid #eee; }
+                    td { padding: 10px; border-bottom: 1px solid #f9f9f9; font-size: 13px; }
+                    h2 { font-size: 16px; margin-bottom: 10px; color: #4A4E69; }
+                </style>
             </head>
-            <body class="p-6 bg-[#F4F3EF]">${bodyClone.innerHTML}</body>
+            <body>
+                <div class="container">
+                    <h2>🏠 房源对比清单</h2>
+                    ${bodyClone.querySelector('table') ? bodyClone.querySelector('table').outerHTML : '暂无数据'}
+                </div>
+            </body>
             </html>`;
 
             const blob = new Blob([htmlContent], { type: 'text/html' });
@@ -646,7 +657,6 @@
             a.href = url;
             a.download = 'house_view_archive.html';
             a.click();
-
             URL.revokeObjectURL(url);
         }
 
