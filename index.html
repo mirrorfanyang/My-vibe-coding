@@ -176,34 +176,36 @@
         // 全局变量：用于记住当前打开的房源有哪些图，以及看到第几张了
         let currentLightboxData = { images: [], index: 0 };
 
-        // 打开大图模态框
-        function openLightbox(images, index) {
-            currentLightboxData = { images, index };
+        function openLightbox(imagesData, index) {
+            const images = Array.isArray(imagesData) ? imagesData : [imagesData];
+            currentLightboxData = { images: images, index: index };
             const lightbox = document.getElementById('imageLightbox');
             const img = document.getElementById('lightboxImg');
+            
             img.src = images[index];
             lightbox.classList.remove('hidden');
             lightbox.classList.add('flex');
             
-            // 确保图标加载，因为我们加了箭头
-            lucide.createIcons(); 
+            lucide.createIcons();
         }
 
-        // 切换图片 (上一张/下一张)
         function changeImage(direction) {
-            let { images, index } = currentLightboxData;
-            // 循环切换逻辑：如果到头了，自动回到第一张；如果是第一张，点左键回最后一张
-            index = (index + direction + images.length) % images.length;
+            const { images, index } = currentLightboxData;
             
-            currentLightboxData.index = index;
-            document.getElementById('lightboxImg').src = images[index];
+            if (!images || images.length === 0) return; 
+            
+            const newIndex = (index + direction + images.length) % images.length;
+            
+            currentLightboxData.index = newIndex;
+            document.getElementById('lightboxImg').src = images[newIndex];
         }
 
-        // 关闭模态框
         function closeLightbox() {
             const lightbox = document.getElementById('imageLightbox');
             lightbox.classList.add('hidden');
             lightbox.classList.remove('flex');
+            
+            currentLightboxData = { images: [], index: 0 };
         }
 
         // --- 模态框系统结束 ---
@@ -308,83 +310,83 @@
         }
 
 // 1. 总调度：负责整体框架渲染
-function renderMatrix() {
-    const headerRow = document.getElementById('dimensionHeader');
-    const bodyContainer = document.getElementById('houseMatrixBody');
+        function renderMatrix() {
+            const headerRow = document.getElementById('dimensionHeader');
+            const bodyContainer = document.getElementById('houseMatrixBody');
 
-    // 渲染头部
-    headerRow.innerHTML = `<th class="p-3 text-left text-xs font-semibold text-gray-500 w-44 rounded-l-xl cursor-default">🏡 房源与地理坐标</th>` 
-                          + renderTableHeader();
-    headerRow.innerHTML += `<th class="p-2 w-10 cursor-default"></th>`;
+            // 渲染头部
+            headerRow.innerHTML = `<th class="p-3 text-left text-xs font-semibold text-gray-500 w-44 rounded-l-xl cursor-default">🏡 房源与地理坐标</th>` 
+                                + renderTableHeader();
+            headerRow.innerHTML += `<th class="p-2 w-10 cursor-default"></th>`;
 
-    // 渲染内容
-    bodyContainer.innerHTML = '';
-    houses.forEach(house => {
-        bodyContainer.innerHTML += renderTableRows(house);
-    });
+            // 渲染内容
+            bodyContainer.innerHTML = '';
+            houses.forEach(house => {
+                bodyContainer.innerHTML += renderTableRows(house);
+            });
 
-    lucide.createIcons(); // 确保图标重新渲染
+            lucide.createIcons(); // 确保图标重新渲染
 }
 
 // 2. 渲染表头：专注维度名称
-function renderTableHeader() {
-    return dimensions.map(dim => {
-        let showName = dim.name + (dim.unit ? ` (${dim.unit})` : '');
-        return `
-            <th data-dim-id="${dim.id}" class="p-3 text-left text-xs font-semibold text-gray-600 bg-gray-50/60 min-w-[140px] cursor-move select-none border-l border-gray-100/50">
-                <div class="flex items-center justify-between group">
-                    <span class="flex items-center gap-1"><i data-lucide="grip-vertical" class="w-3 h-3 text-gray-300"></i> ${showName}</span>
-                    <i data-lucide="x" class="w-3 h-3 text-rose-400 opacity-0 group-hover:opacity-100 cursor-pointer" onclick="event.stopPropagation(); deleteDimension('${dim.id}')"></i>
-                </div>
-            </th>`;
-    }).join('');
+        function renderTableHeader() {
+            return dimensions.map(dim => {
+                let showName = dim.name + (dim.unit ? ` (${dim.unit})` : '');
+                return `
+                    <th data-dim-id="${dim.id}" class="p-3 text-left text-xs font-semibold text-gray-600 bg-gray-50/60 min-w-[140px] cursor-move select-none border-l border-gray-100/50">
+                        <div class="flex items-center justify-between group">
+                            <span class="flex items-center gap-1"><i data-lucide="grip-vertical" class="w-3 h-3 text-gray-300"></i> ${showName}</span>
+                            <i data-lucide="x" class="w-3 h-3 text-rose-400 opacity-0 group-hover:opacity-100 cursor-pointer" onclick="event.stopPropagation(); deleteDimension('${dim.id}')"></i>
+                        </div>
+                    </th>`;
+            }).join('');
 }
 
 // 3. 渲染行：专注房源信息与每一列的占位
-function renderTableRows(house) {
-    let cells = dimensions.map(dim => renderCell(house, dim)).join('');
-    return `
-        <tr data-house-id="${house.id}" class="hover:bg-gray-50/40 transition group">
-            <td class="p-3 text-xs font-medium text-[#4A4E69] drag-handle cursor-move">
-                <div class="font-bold text-[#4A4E69] flex items-center gap-1 bg-gray-50/30 p-1 rounded-md border border-transparent">
-                    <i data-lucide="grip-horizontal" class="w-3 h-3 text-gray-300"></i> 
-                    <input type="text" class="w-full bg-transparent outline-none text-xs" value="${house.name}" onchange="updateHouseName('${house.id}', this.value)">
-                </div>
-                <div class="text-[10px] text-gray-400 mt-1 flex items-center gap-1 bg-gray-50 p-1 rounded-md border w-fit" onclick="event.stopPropagation();">
-                    <span>纬:</span><input type="number" class="w-14 bg-transparent outline-none text-[9px] text-center" value="${house.lat.toFixed(5)}" onchange="updateHouseLatLngDirect('${house.id}', 'lat', this.value)">
-                    <span>经:</span><input type="number" class="w-16 bg-transparent outline-none text-[9px] text-center" value="${house.lng.toFixed(5)}" onchange="updateHouseLatLngDirect('${house.id}', 'lng', this.value)">
-                </div>
-            </td>
-            ${cells}
-            <td class="p-2 text-center">
-                <button onclick="deleteHouse('${house.id}')" class="text-gray-300 hover:text-rose-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-            </td>
-        </tr>`;
+        function renderTableRows(house) {
+            let cells = dimensions.map(dim => renderCell(house, dim)).join('');
+            return `
+                <tr data-house-id="${house.id}" class="hover:bg-gray-50/40 transition group">
+                    <td class="p-3 text-xs font-medium text-[#4A4E69] drag-handle cursor-move">
+                        <div class="font-bold text-[#4A4E69] flex items-center gap-1 bg-gray-50/30 p-1 rounded-md border border-transparent">
+                            <i data-lucide="grip-horizontal" class="w-3 h-3 text-gray-300"></i> 
+                            <input type="text" class="w-full bg-transparent outline-none text-xs" value="${house.name}" onchange="updateHouseName('${house.id}', this.value)">
+                        </div>
+                        <div class="text-[10px] text-gray-400 mt-1 flex items-center gap-1 bg-gray-50 p-1 rounded-md border w-fit" onclick="event.stopPropagation();">
+                            <span>纬:</span><input type="number" class="w-14 bg-transparent outline-none text-[9px] text-center" value="${house.lat.toFixed(5)}" onchange="updateHouseLatLngDirect('${house.id}', 'lat', this.value)">
+                            <span>经:</span><input type="number" class="w-16 bg-transparent outline-none text-[9px] text-center" value="${house.lng.toFixed(5)}" onchange="updateHouseLatLngDirect('${house.id}', 'lng', this.value)">
+                        </div>
+                    </td>
+                    ${cells}
+                    <td class="p-2 text-center">
+                        <button onclick="deleteHouse('${house.id}')" class="text-gray-300 hover:text-rose-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </td>
+                </tr>`;
 }
 
 // 4. 渲染单元格：专注不同类型数据的显示（图片、视频、数字）
-function renderCell(house, dim) {
-    let val = house.values[dim.id] || '';
-    
-    // 如果是图片，只关心图片逻辑
-    if (dim.type === 'media') {
-    const images = Array.isArray(val) ? val : (val ? [val] : []);
-    
-    return `<td class="p-2 text-xs">
-        <div class="flex flex-wrap gap-1">
-            ${images.map((img, idx) => `
-                <img src="${img}" 
-                    class="w-12 h-10 object-cover rounded-lg border cursor-pointer hover:ring-2 hover:ring-[#8E9AAF]" 
-                    onclick="event.stopPropagation(); openLightbox(${JSON.stringify(images).replace(/"/g, "'")}, ${idx})">
-            `).join('')}
-            <label class="flex items-center justify-center bg-gray-100 px-2 py-1 rounded-md text-[10px] cursor-pointer min-w-[40px]">
-                <i data-lucide="plus" class="w-3 h-3"></i>
-                <input type="file" accept="image/*" onchange="captureMedia(this, '${house.id}', '${dim.id}', 'image')" class="hidden">
-            </label>
-        </div>
-    </td>`;
-}
-    
+        function renderCell(house, dim) {
+            let val = house.values[dim.id] || '';
+            
+            // 如果是图片，只关心图片逻辑
+            if (dim.type === 'media') {
+            const images = Array.isArray(val) ? val : (val ? [val] : []);
+            
+            return `<td class="p-2 text-xs">
+                <div class="flex flex-wrap gap-1">
+                    ${images.map((img, idx) => `
+                        <img src="${img}" 
+                            class="w-12 h-10 object-cover rounded-lg border cursor-pointer hover:ring-2 hover:ring-[#8E9AAF]" 
+                            onclick="event.stopPropagation(); openLightbox(${JSON.stringify(images).replace(/"/g, "'")}, ${idx})">
+                    `).join('')}
+                    <label class="flex items-center justify-center bg-gray-100 px-2 py-1 rounded-md text-[10px] cursor-pointer min-w-[40px]">
+                        <i data-lucide="plus" class="w-3 h-3"></i>
+                        <input type="file" accept="image/*" onchange="captureMedia(this, '${house.id}', '${dim.id}', 'image')" class="hidden">
+                    </label>
+                </div>
+            </td>`;
+        }
+            
     // 如果是数字或文本，只关心数值逻辑
     let isNumeric = (dim.type === 'number' || dim.type === 'custom_value');
     return `<td class="p-2 text-xs">
