@@ -630,10 +630,12 @@
 
         function exportReadOnly() {
             const bodyClone = document.body.cloneNode(true);
-
+            
+            // 移除不必要元素
             const toRemove = bodyClone.querySelectorAll('button, input[type="file"], .drag-handle, i[data-lucide], .cursor-move');
             toRemove.forEach(el => el.remove());
-
+            
+            // 替换输入框为文本
             const inputs = bodyClone.querySelectorAll('input');
             inputs.forEach(input => {
                 const span = document.createElement('span');
@@ -644,11 +646,7 @@
 
             const htmlContent = `<!DOCTYPE html>
             <html lang="zh-CN">
-            <head>
-                <meta charset="UTF-8">
-                <title>房源对比 - 只读预览版</title>
-                <script src="https://cdn.tailwindcss.com"></script>
-            </head>
+            <head><script src="https://cdn.tailwindcss.com"></script></head>
             <body class="p-6 bg-[#F4F3EF]">${bodyClone.innerHTML}</body>
             </html>`;
 
@@ -658,7 +656,7 @@
             a.download = 'house_view_readonly.html';
             a.click();
         }
-                
+
     </script>
 </body>
 </html>
