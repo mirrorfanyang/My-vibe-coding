@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>看房神器 - 决策矩阵 V3.4.1 坐标可改与参考图版</title>
+    <title>看房神器 - 决策矩阵 V3.5.2 多媒体视图优化（内部锁定后的页码显示）</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -32,6 +32,8 @@
 <div id="imageLightbox" class="fixed inset-0 bg-black/95 hidden z-[100] flex justify-center items-center p-4" onclick="closeLightbox()">
     <img id="lightboxImg" class="max-w-full max-h-full object-contain rounded-lg" onclick="event.stopPropagation()">
     
+    <div id="imageCounter" class="absolute bottom-10 text-white/80 bg-black/30 px-3 py-1 rounded-full text-sm"></div>
+
     <button class="absolute left-4 text-white/70 hover:text-white" onclick="event.stopPropagation(); changeImage(-1)">
         <i data-lucide="chevron-left" class="w-10 h-10"></i>
     </button>
@@ -183,6 +185,9 @@
             const img = document.getElementById('lightboxImg');
             
             img.src = images[index];
+
+            document.getElementById('imageCounter').innerText = `${index + 1} / ${images.length}`;
+            
             lightbox.classList.remove('hidden');
             lightbox.classList.add('flex');
             
@@ -198,6 +203,7 @@
             
             currentLightboxData.index = newIndex;
             document.getElementById('lightboxImg').src = images[newIndex];
+            document.getElementById('imageCounter').innerText = `${newIndex + 1} / ${images.length}`;
         }
 
         function closeLightbox() {
