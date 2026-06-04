@@ -378,16 +378,15 @@
             lucide.createIcons(); // 确保图标重新渲染
 }
 
-// 2. 渲染表头：专注维度名称
+        // 渲染表头 - 确保逻辑与下面 renderCell 里的 widthClass 映射一致
         function renderTableHeader() {
             return dimensions.map(dim => {
                 let showName = dim.name + (dim.unit ? ` (${dim.unit})` : '');
                 
-                // 建议：根据 dim.id 来设置不同的宽度
-                // 例如：价格或通勤设为 w-20 (80px)，备注或实拍照片设为 w-32 (128px)
-                let widthClass = 'w-24'; // 默认宽度
+                // 统一宽度策略
+                let widthClass = 'w-24'; 
+                if (dim.type === 'media') widthClass = 'w-32';
                 if (dim.id === 'price') widthClass = 'w-20';
-                if (dim.id === 'notes') widthClass = 'w-32';
 
                 return `
                     <th data-dim-id="${dim.id}" class="p-3 text-left text-xs font-semibold text-gray-600 bg-gray-50/60 ${widthClass} cursor-move select-none border-l border-gray-100/50">
@@ -421,25 +420,21 @@
                 </tr>`;
 }
 
-// 4. 渲染单元格：专注不同类型数据的显示（图片、视频、数字）
+        // 渲染单元格
         function renderCell(house, dim) {
             let val = house.values[dim.id] || '';
             
-            // --- 在这里添加你的宽度判断逻辑 ---
-            let widthClass = "w-24"; // 默认宽度
-            if (dim.id === 'price') widthClass = "w-20";    // 价格列窄一点
-            if (dim.type === 'media') widthClass = "w-32";  // 照片列宽一点，避免图片换行太挤
-            // --------------------------------
-            
-            // 1. 如果是图片列
+            // 必须与 renderTableHeader 里的逻辑一模一样！
+            let widthClass = "w-24"; 
+            if (dim.type === 'media') widthClass = "w-32";
+            if (dim.id === 'price') widthClass = "w-20";
+
             if (dim.type === 'media') {
                 const images = Array.isArray(val) ? val : (val ? [val] : []);
-                
-                return `<td class="p-2 text-xs ${widthClass}">
+                return `<td class="p-2 text-xs ${widthClass} border-l border-gray-50">
                     <div class="flex flex-wrap gap-1">
                         ${images.map((img, idx) => `
-                            <img src="${img}" 
-                                class="w-10 h-8 object-cover rounded-lg border cursor-pointer hover:ring-2 hover:ring-[#8E9AAF]" 
+                            <img src="${img}" class="w-10 h-8 object-cover rounded-lg border cursor-pointer hover:ring-2 hover:ring-[#8E9AAF]" 
                                 onclick="event.stopPropagation(); openLightbox(${JSON.stringify(images).replace(/"/g, "'")}, ${idx})">
                         `).join('')}
                         <label class="flex items-center justify-center bg-gray-100 px-1 py-1 rounded-md text-[10px] cursor-pointer w-10 h-8">
@@ -450,14 +445,9 @@
                 </td>`;
             }
                     
-            // 2. 如果是数字或文本列
             let isNumeric = (dim.type === 'number' || dim.type === 'custom_value');
-            return `<td class="p-2 text-xs ${widthClass}">
-                <input type="${isNumeric ? 'number' : 'text'}" 
-                    value="${val}" 
-                    class="w-full bg-transparent outline-none ${isNumeric ? 'text-right' : ''}" 
-                    onchange="updateValue('${house.id}', '${dim.id}', this.value, '${dim.type}')" 
-                    placeholder="-">
+            return `<td class="p-2 text-xs ${widthClass} border-l border-gray-50">
+                <input type="${isNumeric ? 'number' : 'text'}" value="${val}" class="w-full bg-transparent outline-none ${isNumeric ? 'text-right' : ''}" onchange="updateValue('${house.id}', '${dim.id}', this.value, '${dim.type}')" placeholder="-">
             </td>`;
         }
 
