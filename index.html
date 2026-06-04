@@ -169,12 +169,11 @@
     </div>
 
     <script>
-        // 🌟 初始化默认配置中，已经预留好了“📋 中介参考/户型图”专属列
         let dimensions = [
             { id: 'price', name: '月租金/预算', type: 'number', weight: 5, unit: '元' },
-            { id: 'commute', name: '步行通勤时间', type: 'custom_value', weight: 4, unit: 'min' },
-            { id: 'photos', name: '📋中介参考', type: 'media', weight: 1 },
-            { id: 'real_photos', name: '📸实拍照片', type: 'media', weight: 1 },
+            { id: 'commute', name: '步行时间', type: 'custom_value', weight: 4, unit: 'min' },
+            { id: 'photos', name: '📋中介', type: 'media', weight: 1 },
+            { id: 'real_photos', name: '📸实拍', type: 'media', weight: 1 },
         ];
         let houses = [];
         let db, map, markers = {};
@@ -384,9 +383,9 @@
                 let showName = dim.name + (dim.unit ? ` (${dim.unit})` : '');
                 
                 // 统一宽度策略
-                let widthClass = 'w-24'; 
-                if (dim.type === 'media') widthClass = 'w-32';
-                if (dim.id === 'price') widthClass = 'w-20';
+                let widthClass = 'w-16'; 
+                if (dim.type === 'media') widthClass = 'w-24';
+                if (dim.id === 'price') widthClass = 'w-14';
 
                 return `
                     <th data-dim-id="${dim.id}" class="p-3 text-left text-xs font-semibold text-gray-600 bg-gray-50/60 ${widthClass} cursor-move select-none border-l border-gray-100/50">
@@ -425,9 +424,9 @@
             let val = house.values[dim.id] || '';
             
             // 必须与 renderTableHeader 里的逻辑一模一样！
-            let widthClass = "w-24"; 
-            if (dim.type === 'media') widthClass = "w-32";
-            if (dim.id === 'price') widthClass = "w-20";
+            let widthClass = "w-16"; 
+            if (dim.type === 'media') widthClass = "w-24";
+            if (dim.id === 'price') widthClass = "w-14";
 
             if (dim.type === 'media') {
                 const images = Array.isArray(val) ? val : (val ? [val] : []);
