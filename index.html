@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>看房神器 - 决策矩阵 V3.3 自定义单位与列拖拽版</title>
+    <title>看房神器 - 决策矩阵 V3.4 坐标可改与参考图版</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -34,9 +34,9 @@
         <div>
             <h1 class="text-xl font-bold tracking-tight text-[#4A4E69] flex items-center gap-1.5">
                 <i data-lucide="smartphone" class="w-5 h-5 text-[#8E9AAF]"></i>
-                租房看房神器 <span class="text-[10px] font-normal px-2 py-0.5 bg-[#8E9AAF] text-white rounded-full">V3.3 自定义单位与双向拖拽版</span>
+                租房看房神器 <span class="text-[10px] font-normal px-2 py-0.5 bg-[#4A4E69] text-white rounded-full">V3.4 坐标修改与相册图存版</span>
             </h1>
-            <p class="text-xs text-gray-500 mt-0.5">房源可以上下拖拽，维度表头可以左右拖拽。数值维度支持设定专属单位（min, km等）。</p>
+            <p class="text-xs text-gray-500 mt-0.5">可以直接在表格内修改经纬度让地图联动。开放了手机相册，支持看房前提前存入中介参考图。</p>
         </div>
         <div class="flex gap-2 w-full sm:w-auto">
             <button onclick="openModal('addHouseModal')" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-[#8E9AAF] hover:bg-[#7A869A] text-white px-3 py-2 rounded-xl text-xs font-medium cursor-pointer transition">
@@ -59,18 +59,18 @@
                     <h2 class="text-sm font-bold text-[#4A4E69] flex items-center gap-1.5">
                         <i data-lucide="grid" class="w-4 h-4"></i> 看板式决策矩阵
                     </h2>
-                    <span class="text-[10px] text-gray-400">💡 提示：长按房源上下拖动排序；长按表头维度左右拖动调换位置。</span>
+                    <span class="text-[10px] text-gray-400">💡 提示：点击房源下方的“纬/经”数值可直接输入二次修改，地图标记会同步跟随移动。</span>
                 </div>
 
                 <div class="overflow-x-auto no-scrollbar">
                     <table class="min-w-full divide-y divide-gray-100">
                         <thead>
                             <tr id="dimensionHeader" class="bg-gray-50/60 rounded-xl">
-                                <th class="p-3 text-left text-xs font-semibold text-gray-500 w-44 rounded-l-xl">目标房源</th>
-                                </tr>
+                                <th class="p-3 text-left text-xs font-semibold text-gray-500 w-44 rounded-l-xl">目标房源与坐标 (可改)</th>
+                            </tr>
                         </thead>
                         <tbody id="houseMatrixBody" class="divide-y divide-gray-100 bg-white">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -83,9 +83,9 @@
             </div>
             <div id="aiOutputArea" class="flex-1 overflow-y-auto no-scrollbar text-xs text-gray-600 space-y-3">
                 <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed">
-                    <b>⚙️ 拖拽与数值单位升级：</b><br>
-                    1. 自由调整视图：现在表格支持纵向、横向双向拖拽。你可以把重要的考核维度（如月租、通勤）直接拖到最前面。<br>
-                    2. 自定义数字单位：新建硬核数值维度时输入的单位，在填表时会作为小后缀贴在数字输入框内。
+                    <b>💡 坐标校准与相册避坑：</b><br>
+                    1. <b>坐标微调</b>：如果发现初始定位不准，无需删掉重新添加。直接在表格左侧打字修改经纬度数字，地图定位点即可实时更新。<br>
+                    2. <b>微信参考图</b>：中介发你的户型图和网图，可以直接保存到手机相册，在“中介参考图”一列点击即可无缝上传对比。
                 </div>
             </div>
         </div>
@@ -148,7 +148,9 @@
     </div>
 
     <script>
+        // 🌟 初始化默认配置中，已经预留好了“📋 中介参考/户型图”专属列
         let dimensions = [
+            { id: 'agent_photos', name: '📋 中介参考/户型图', type: 'media', weight: 1 },
             { id: 'price', name: '月租金/预算', type: 'number', weight: 5, unit: '元' },
             { id: 'commute', name: '通勤时间', type: 'custom_value', weight: 4, unit: 'min' },
             { id: 'photos', name: '📸 房间照片实景', type: 'media', weight: 1 },
@@ -157,7 +159,6 @@
         let houses = [];
         let db, map, markers = {};
 
-        // --- 核心安全锁：初始化手机本地浏览器数据库 IndexedDB ---
         function initStorage() {
             const request = indexedDB.open("VibeHousingDB", 1);
             request.onupgradeneeded = (e) => {
@@ -192,7 +193,7 @@
                     if(reqHouses.result) houses = reqHouses.result.value;
                     if(houses.length === 0) {
                         houses = [
-                            { id: 'h1', name: '💡 样板房：陆家嘴次卧', lat: 31.2397, lng: 121.4997, values: { price: 4500, commute: 25 } }
+                            { id: 'h1', name: '💡 样板房：陆家嘴次卧', lat: 31.2397, lng: 121.4997, values: { price: 4500, commute: 25, agent_photos: '' } }
                         ];
                     }
                     initMap();
@@ -202,7 +203,6 @@
             };
         }
 
-        // --- 地图模块 ---
         function initMap() {
             map = L.map('map', { zoomControl: false }).setView([31.23, 121.49], 11);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
@@ -222,6 +222,21 @@
             }
         }
 
+        // 🌟 核心新增函数：允许直接打字修改表格内的经纬度，并同步驱动地图刷新
+        function updateHouseLatLngDirect(houseId, field, value) {
+            const house = houses.find(h => h.id === houseId);
+            if (house && value !== '') {
+                house[field] = parseFloat(value);
+                saveData();
+                // 实时更新对应地图图层的位置
+                if (markers[houseId]) {
+                    markers[houseId].setLatLng([house.lat, house.lng]);
+                    // 让地图缓动对齐新修改的目标点
+                    map.panTo([house.lat, house.lng]);
+                }
+            }
+        }
+
         function focusHouse(id) {
             const house = houses.find(h => h.id === id);
             if (house && markers[id]) {
@@ -230,7 +245,6 @@
             }
         }
 
-        // --- 控制扩充维度弹窗里单位显示隐藏的开关 ---
         function handleDimTypeChange() {
             let type = document.getElementById('modalDimType').value;
             let unitBox = document.getElementById('unitContainer');
@@ -241,16 +255,14 @@
             } else {
                 unitBox.classList.add('hidden');
             }
-            weightBox.style.display = (type==='media'||type==='video') ? 'none' : 'block';
+            weightBox.style.display = (type=='media'||type=='video') ? 'none' : 'block';
         }
 
-        // --- 核心矩阵渲染逻辑 ---
         function renderMatrix() {
             const headerRow = document.getElementById('dimensionHeader');
             const bodyContainer = document.getElementById('houseMatrixBody');
 
-            // 渲染表头
-            headerRow.innerHTML = `<th class="p-3 text-left text-xs font-semibold text-gray-500 w-44 rounded-l-xl cursor-default">🏡 房源与地理坐标</th>`;
+            headerRow.innerHTML = `<th class="p-3 text-left text-xs font-semibold text-gray-500 w-44 rounded-l-xl cursor-default">🏡 房源与地理坐标 (可打字修改)</th>`;
             dimensions.forEach(dim => {
                 let showName = dim.name + (dim.unit ? ` (${dim.unit})` : '');
                 headerRow.innerHTML += `
@@ -264,29 +276,37 @@
             });
             headerRow.innerHTML += `<th class="p-2 w-10 cursor-default"></th>`;
 
-            // 渲染表格每行
             bodyContainer.innerHTML = '';
             houses.forEach(house => {
+                // 🌟 修改：将原本死板的经纬度文本改成了可以直接输入编辑的两个 mini 输入框
                 let rowHtml = `
                     <tr data-house-id="${house.id}" class="hover:bg-gray-50/40 transition group">
-                        <td class="p-3 text-xs font-medium text-[#4A4E69] cursor-pointer" onclick="focusHouse('${house.id}')">
-                            <div class="font-bold text-[#4A4E69] flex items-center gap-1"><i data-lucide="grip-horizontal" class="w-3 h-3 text-gray-200"></i> ${house.name}</div>
-                            <div class="text-[9px] text-gray-400 mt-0.5">📍 ${house.lat.toFixed(3)}, ${house.lng.toFixed(3)}</div>
+                        <td class="p-3 text-xs font-medium text-[#4A4E69]">
+                            <div class="font-bold text-[#4A4E69] flex items-center gap-1 cursor-pointer" onclick="focusHouse('${house.id}')">
+                                <i data-lucide="grip-horizontal" class="w-3 h-3 text-gray-200"></i> ${house.name}
+                            </div>
+                            <div class="text-[10px] text-gray-400 mt-1 flex items-center gap-1 bg-gray-50 p-1 rounded-md border border-gray-100 w-fit">
+                                <span>纬:</span>
+                                <input type="number" step="0.000001" class="w-14 bg-transparent focus:bg-white text-gray-600 font-mono outline-none text-[9px] text-center" value="${house.lat.toFixed(5)}" onchange="updateHouseLatLngDirect('${house.id}', 'lat', this.value)">
+                                <span class="text-gray-300">|</span>
+                                <span>经:</span>
+                                <input type="number" step="0.000001" class="w-16 bg-transparent focus:bg-white text-gray-600 font-mono outline-none text-[9px] text-center" value="${house.lng.toFixed(5)}" onchange="updateHouseLatLngDirect('${house.id}', 'lng', this.value)">
+                            </div>
                         </td>
                 `;
 
-                // 严格按照 dimensions 数组的当前顺序动态拼装每一格单元格
                 dimensions.forEach(dim => {
                     let val = house.values[dim.id] !== undefined ? house.values[dim.id] : '';
                     
                     if (dim.type === 'media') {
+                        // 🌟 修改：取消了旧版强制调用相机的 capture 限制，使其可以自选微信相册图片
                         rowHtml += `
                             <td class="p-2 text-xs">
                                 <div class="flex flex-col gap-1">
-                                    ${val ? `<img src="${val}" class="w-16 h-12 object-cover rounded-lg border border-gray-100" onclick="viewFullImage('${val}')">` : ''}
+                                    ${val ? `<img src="${val}" class="w-16 h-12 object-cover rounded-lg border border-gray-100 shadow-2xs cursor-pointer" onclick="viewFullImage('${val}')">` : ''}
                                     <label class="flex items-center justify-center gap-1 bg-gray-100 active:bg-gray-200 text-gray-600 px-2 py-1 rounded-md text-[10px] cursor-pointer transition">
-                                        <i data-lucide="camera" class="w-3 h-3"></i> ${val ? '重新拍' : '拍房间'}
-                                        <input type="file" accept="image/*" capture="environment" onchange="captureMedia(this, '${house.id}', '${dim.id}', 'image')" class="hidden">
+                                        <i data-lucide="image" class="w-3 h-3"></i> ${val ? '更换' : '传图片'}
+                                        <input type="file" accept="image/*" onchange="captureMedia(this, '${house.id}', '${dim.id}', 'image')" class="hidden">
                                     </label>
                                 </div>
                             </td>
@@ -298,13 +318,12 @@
                                     ${val ? `<video src="${val}" class="w-16 h-12 object-cover rounded-lg border" controls></video>` : ''}
                                     <label class="flex items-center justify-center gap-1 bg-gray-100 active:bg-gray-200 text-gray-600 px-2 py-1 rounded-md text-[10px] cursor-pointer transition">
                                         <i data-lucide="video" class="w-3 h-3"></i> ${val ? '重录' : '录视频'}
-                                        <input type="file" accept="video/*" capture="environment" onchange="captureMedia(this, '${house.id}', '${dim.id}', 'video')" class="hidden">
+                                        <input type="file" accept="video/*" onchange="captureMedia(this, '${house.id}', '${dim.id}', 'video')" class="hidden">
                                     </label>
                                 </div>
                             </td>
                         `;
                     } else {
-                        // 包含数字项、打分制、以及我们新增的带有自定义单位的硬核数值项
                         let isNumeric = (dim.type === 'number' || dim.type === 'custom_value');
                         let inputClass = isNumeric ? 'text-right font-mono font-bold pr-1' : 'text-left';
                         
@@ -356,17 +375,14 @@
             if (house) {
                 house.values[dimId] = (type === 'number' || type === 'custom_value') ? (val === '' ? '' : parseFloat(val)) : val;
                 saveData();
-                // 仅在输入带有单位时重新渲染以实时挂载后缀
                 if(type === 'custom_value' || type === 'number') renderMatrix();
             }
         }
 
-        // --- 🌟 双向拖拽绑定系统（支持行上下拖拽、列左右拖拽） ---
         function setupDragAndDrop() {
-            // 1. 行排序 (房源上下拖拽)
             Sortable.create(document.getElementById('houseMatrixBody'), {
                 animation: 150, 
-                handle: 'td:first-child',
+                handle: 'td:first-child font-bold', // 限制通过房源名字区域拖拽，防止干扰经纬度输入框选择
                 ghostClass: 'drag-ghost',
                 onEnd: () => {
                     let reordered = [];
@@ -379,10 +395,9 @@
                 }
             });
 
-            // 2. 列排序 (表头维度左右拖拽)
             Sortable.create(document.getElementById('dimensionHeader'), {
                 animation: 150,
-                draggable: 'th[data-dim-id]', // 锁定只有带数据维度的可以拖，排除第一列房源和最后一列操作列
+                draggable: 'th[data-dim-id]', 
                 ghostClass: 'drag-ghost',
                 onEnd: () => {
                     let reorderedDim = [];
@@ -390,15 +405,13 @@
                         let dId = th.getAttribute('data-dim-id');
                         reorderedDim.push(dimensions.find(d => d.id === dId));
                     });
-                    // 把不带 data-dim-id 的维度（被删掉的或者不需要排的）安全过滤，更新数据
                     dimensions = reorderedDim.filter(Boolean);
                     saveData();
-                    renderMatrix(); // 列位置重新洗牌，强制全面重绘视图
+                    renderMatrix(); 
                 }
             });
         }
 
-        // --- 弹窗管理与提交 ---
         function openModal(id) {
             document.getElementById(id).classList.remove('hidden');
             document.getElementById(id).classList.add('flex');
@@ -435,7 +448,7 @@
             });
             saveData(); 
             renderMatrix(); 
-            setupDragAndDrop(); // 重新刷新拖拽配置
+            setupDragAndDrop(); 
             closeModal('addDimModal');
             document.getElementById('modalDimName').value = '';
             document.getElementById('modalDimUnit').value = '';
@@ -469,8 +482,8 @@
                 if(houses.length === 0) { out.innerHTML = '无数据'; return; }
                 out.innerHTML = `
                     <div class="bg-[#EFD3D7]/50 p-3 rounded-xl border border-[#EFD3D7]">
-                        <h4 class="font-bold text-gray-700">🥇 AI 视图布局就绪</h4>
-                        已成功锁定您的首选维度矩阵。你可以随意进行双向调序，系统将在下一次评估中深度融合您的数据单元！
+                        <h4 class="font-bold text-gray-700">🥇 动态同步链路建立成功</h4>
+                        经纬度二次编辑功能工作良好，修改即生效并自动同步本地 IndexedDB 缓存。
                     </div>
                 `;
             }, 500);
@@ -478,7 +491,7 @@
 
         function viewFullImage(url) {
             let w = window.open();
-            if(w) w.document.write(`<img src="${url}" style="max-width:100%; max-height:100vh; display:block; margin:auto;">`);
+            if(w) w.document.write(`<img src="${url}" style="max-width:100%; max-height:100vh; display:block; margin:auto; background:#1a1a1a; padding:20px; box-sizing:border-box;">`);
         }
 
         window.addEventListener('DOMContentLoaded', initStorage);
