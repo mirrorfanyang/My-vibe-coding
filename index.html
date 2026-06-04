@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>看房神器 - 决策矩阵 V3.3 自定义单位与列拖拽版</title>
+    <title>看房神器 - 决策矩阵 V3.4 专属锚点版</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -30,13 +30,14 @@
 </head>
 <body class="p-3 md:p-6 min-h-screen flex flex-col gap-4 max-w-7xl mx-auto">
 
+    <!-- 顶部 header -->
     <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white/70 backdrop-blur-md p-5 rounded-3xl shadow-xs border border-white/40">
         <div>
             <h1 class="text-xl font-bold tracking-tight text-[#4A4E69] flex items-center gap-1.5">
-                <i data-lucide="smartphone" class="w-5 h-5 text-[#8E9AAF]"></i>
-                租房看房神器 <span class="text-[10px] font-normal px-2 py-0.5 bg-[#8E9AAF] text-white rounded-full">V3.3 自定义单位与双向拖拽版</span>
+                <i data-lucide="map-pin" class="w-5 h-5 text-rose-400"></i>
+                租房看房神器 <span class="text-[10px] font-normal px-2 py-0.5 bg-[#4A4E69] text-white rounded-full">V3.4 沙河核心圈定版</span>
             </h1>
-            <p class="text-xs text-gray-500 mt-0.5">房源可以上下拖拽，维度表头可以左右拖拽。数值维度支持设定专属单位（min, km等）。</p>
+            <p class="text-xs text-gray-500 mt-0.5">已固化北邮沙河校区、沙河地铁站及周边商场图层，方便评估通勤距离。</p>
         </div>
         <div class="flex gap-2 w-full sm:w-auto">
             <button onclick="openModal('addHouseModal')" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-[#8E9AAF] hover:bg-[#7A869A] text-white px-3 py-2 rounded-xl text-xs font-medium cursor-pointer transition">
@@ -48,18 +49,22 @@
         </div>
     </header>
 
+    <!-- 主体 -->
     <main class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1">
+        <!-- 左侧：矩阵与地图 -->
         <div class="lg:col-span-2 flex flex-col gap-4">
+            <!-- 地图 -->
             <div class="bg-white rounded-3xl p-3 shadow-xs border border-gray-100 flex flex-col gap-2">
-                <div id="map" class="w-full h-48 rounded-2xl z-10 shadow-inner"></div>
+                <div id="map" class="w-full h-56 rounded-2xl z-10 shadow-inner"></div>
             </div>
 
+            <!-- 决策矩阵表格 -->
             <div class="bg-white rounded-3xl p-4 shadow-xs border border-gray-100 flex flex-col gap-3 overflow-hidden">
                 <div class="flex justify-between items-center px-1">
                     <h2 class="text-sm font-bold text-[#4A4E69] flex items-center gap-1.5">
                         <i data-lucide="grid" class="w-4 h-4"></i> 看板式决策矩阵
                     </h2>
-                    <span class="text-[10px] text-gray-400">💡 提示：长按房源上下拖动排序；长按表头维度左右拖动调换位置。</span>
+                    <span class="text-[10px] text-gray-400">💡 提示：行和列皆可长按拖拽排序。新建房源初始坐标默认定位在沙河站。</span>
                 </div>
 
                 <div class="overflow-x-auto no-scrollbar">
@@ -67,15 +72,16 @@
                         <thead>
                             <tr id="dimensionHeader" class="bg-gray-50/60 rounded-xl">
                                 <th class="p-3 text-left text-xs font-semibold text-gray-500 w-44 rounded-l-xl">目标房源</th>
-                                </tr>
+                            </tr>
                         </thead>
                         <tbody id="houseMatrixBody" class="divide-y divide-gray-100 bg-white">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
+        <!-- 右侧：AI 决策与报告 -->
         <div class="lg:col-span-1 flex flex-col bg-white rounded-3xl p-4 shadow-xs border border-gray-100 max-h-[75vh]">
             <div class="flex justify-between items-center border-b border-gray-100 pb-3 mb-3">
                 <h3 class="text-sm font-bold text-[#4A4E69] flex items-center gap-1"><i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i> 本地 AI 研判顾问</h3>
@@ -83,26 +89,29 @@
             </div>
             <div id="aiOutputArea" class="flex-1 overflow-y-auto no-scrollbar text-xs text-gray-600 space-y-3">
                 <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed">
-                    <b>⚙️ 拖拽与数值单位升级：</b><br>
-                    1. 自由调整视图：现在表格支持纵向、横向双向拖拽。你可以把重要的考核维度（如月租、通勤）直接拖到最前面。<br>
-                    2. 自定义数字单位：新建硬核数值维度时输入的单位，在填表时会作为小后缀贴在数字输入框内。
+                    <b>🎯 地图基准点已加载：</b><br>
+                    • <span class="text-emerald-600 font-bold">绿色大圆圈</span>：北邮沙河校区<br>
+                    • <span class="text-blue-600 font-bold">蓝色大圆圈</span>：沙河地铁站<br>
+                    • <span class="text-amber-600 font-bold">橙色大圆圈</span>：周边核心商圈<br>
+                    点击地图上的圆圈即可查看具体名称。房源会以普通蓝色大头针错开显示。
                 </div>
             </div>
         </div>
     </main>
 
+    <!-- 弹窗 1：新增房源 -->
     <div id="addHouseModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden justify-center items-center z-50 p-4">
         <div class="bg-white rounded-2xl p-5 max-w-sm w-full shadow-xl flex flex-col gap-3">
             <h3 class="text-sm font-bold text-[#4A4E69]">新增待选房源</h3>
-            <input type="text" id="modalHouseName" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none" placeholder="房源简称 (如: 静安区LOFT)">
+            <input type="text" id="modalHouseName" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none" placeholder="房源简称 (如: 兆丰家园南卧)">
             <div class="grid grid-cols-2 gap-2">
                 <div>
-                    <label class="text-[10px] text-gray-400 block mb-0.5">纬度 (可从高德复制)</label>
-                    <input type="number" step="0.000001" id="modalHouseLat" class="w-full px-3 py-1.5 border border-gray-200 rounded-xl text-xs" value="31.2397">
+                    <label class="text-[10px] text-gray-400 block mb-0.5">纬度</label>
+                    <input type="number" step="0.000001" id="modalHouseLat" class="w-full px-3 py-1.5 border border-gray-200 rounded-xl text-xs" value="40.1492">
                 </div>
                 <div>
-                    <label class="text-[10px] text-gray-400 block mb-0.5">经度 (可从高德复制)</label>
-                    <input type="number" step="0.000001" id="modalHouseLng" class="w-full px-3 py-1.5 border border-gray-200 rounded-xl text-xs" value="121.4997">
+                    <label class="text-[10px] text-gray-400 block mb-0.5">经度</label>
+                    <input type="number" step="0.000001" id="modalHouseLng" class="w-full px-3 py-1.5 border border-gray-200 rounded-xl text-xs" value="116.2885">
                 </div>
             </div>
             <div id="modalDynamicValues" class="flex flex-col gap-2 max-h-36 overflow-y-auto"></div>
@@ -113,6 +122,7 @@
         </div>
     </div>
 
+    <!-- 弹窗 2：扩充维度 -->
     <div id="addDimModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden justify-center items-center z-50 p-4">
         <div class="bg-white rounded-2xl p-5 max-w-xs w-full shadow-xl flex flex-col gap-3">
             <h3 class="text-sm font-bold text-[#4A4E69]">扩充评价维度</h3>
@@ -150,14 +160,20 @@
     <script>
         let dimensions = [
             { id: 'price', name: '月租金/预算', type: 'number', weight: 5, unit: '元' },
-            { id: 'commute', name: '通勤时间', type: 'custom_value', weight: 4, unit: 'min' },
+            { id: 'commute', name: '离学校距离', type: 'custom_value', weight: 4, unit: 'km' },
             { id: 'photos', name: '📸 房间照片实景', type: 'media', weight: 1 },
             { id: 'video', name: '📹 现场视频拷问', type: 'video', weight: 1 }
         ];
         let houses = [];
         let db, map, markers = {};
 
-        // --- 核心安全锁：初始化手机本地浏览器数据库 IndexedDB ---
+        // 🌟 硬编码固定的三个沙河核心基准点
+        const coreAnchors = [
+            { name: "🎓 北京邮电大学(沙河校区)", lat: 40.1633, lng: 116.2872, color: "#10B981" }, // 绿色
+            { name: "🚇 沙河地铁站(昌平线)", lat: 40.1492, lng: 116.2885, color: "#3B82F6" },   // 蓝色
+            { name: "🛍️ 沙河主流商圈/商场", lat: 40.1481, lng: 116.2764, color: "#F59E0B" }     // 橙色
+        ];
+
         function initStorage() {
             const request = indexedDB.open("VibeHousingDB", 1);
             request.onupgradeneeded = (e) => {
@@ -192,7 +208,7 @@
                     if(reqHouses.result) houses = reqHouses.result.value;
                     if(houses.length === 0) {
                         houses = [
-                            { id: 'h1', name: '💡 样板房：陆家嘴次卧', lat: 31.2397, lng: 121.4997, values: { price: 4500, commute: 25 } }
+                            { id: 'h1', name: '💡 示例：沙河高教园新房', lat: 40.1580, lng: 116.2920, values: { price: 3200, commute: 1.2 } }
                         ];
                     }
                     initMap();
@@ -202,23 +218,42 @@
             };
         }
 
-        // --- 地图模块 ---
+        // --- 地图模块更新：加入固定核心点位渲染 ---
         function initMap() {
-            map = L.map('map', { zoomControl: false }).setView([31.23, 121.49], 11);
+            // 默认中心视角定在沙河区域
+            map = L.map('map', { zoomControl: false }).setView([40.154, 116.285], 13);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+            
+            // 绘制固定的沙河核心生活圈三个标点（使用不消失的圆形美化）
+            coreAnchors.forEach(anchor => {
+                L.circleMarker([anchor.lat, anchor.lng], {
+                    radius: 9,
+                    fillColor: anchor.color,
+                    color: "#fff",
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.85
+                }).addTo(map).bindPopup(`<b style="color:${anchor.color};">${anchor.name}</b>`).openPopup();
+            });
+
             updateMapMarkers();
         }
 
         function updateMapMarkers() {
+            // 仅清理动态房源点位，不干扰固定基准点
             Object.values(markers).forEach(m => map.removeLayer(m));
             markers = {};
+            
             houses.forEach(h => {
-                const marker = L.marker([h.lat, h.lng]).addTo(map).bindPopup(`<b>${h.name}</b>`);
+                const marker = L.marker([h.lat, h.lng]).addTo(map).bindPopup(`<b>🏡 ${h.name}</b>`);
                 markers[h.id] = marker;
             });
+
+            // 智能视野自适应：同时囊括固定点与新加房源
             if (houses.length > 0) {
-                const group = new L.featureGroup(Object.values(markers));
-                map.fitBounds(group.getBounds().pad(0.3));
+                let allPoints = houses.map(h => [h.lat, h.lng]).concat(coreAnchors.map(a => [a.lat, a.lng]));
+                const bounds = L.latLngBounds(allPoints);
+                map.fitBounds(bounds.pad(0.15));
             }
         }
 
@@ -230,7 +265,6 @@
             }
         }
 
-        // --- 控制扩充维度弹窗里单位显示隐藏的开关 ---
         function handleDimTypeChange() {
             let type = document.getElementById('modalDimType').value;
             let unitBox = document.getElementById('unitContainer');
@@ -244,12 +278,10 @@
             weightBox.style.display = (type==='media'||type==='video') ? 'none' : 'block';
         }
 
-        // --- 核心矩阵渲染逻辑 ---
         function renderMatrix() {
             const headerRow = document.getElementById('dimensionHeader');
             const bodyContainer = document.getElementById('houseMatrixBody');
 
-            // 渲染表头
             headerRow.innerHTML = `<th class="p-3 text-left text-xs font-semibold text-gray-500 w-44 rounded-l-xl cursor-default">🏡 房源与地理坐标</th>`;
             dimensions.forEach(dim => {
                 let showName = dim.name + (dim.unit ? ` (${dim.unit})` : '');
@@ -264,18 +296,16 @@
             });
             headerRow.innerHTML += `<th class="p-2 w-10 cursor-default"></th>`;
 
-            // 渲染表格每行
             bodyContainer.innerHTML = '';
             houses.forEach(house => {
                 let rowHtml = `
                     <tr data-house-id="${house.id}" class="hover:bg-gray-50/40 transition group">
                         <td class="p-3 text-xs font-medium text-[#4A4E69] cursor-pointer" onclick="focusHouse('${house.id}')">
                             <div class="font-bold text-[#4A4E69] flex items-center gap-1"><i data-lucide="grip-horizontal" class="w-3 h-3 text-gray-200"></i> ${house.name}</div>
-                            <div class="text-[9px] text-gray-400 mt-0.5">📍 ${house.lat.toFixed(3)}, ${house.lng.toFixed(3)}</div>
+                            <div class="text-[9px] text-gray-400 mt-0.5">📍 ${house.lat.toFixed(4)}, ${house.lng.toFixed(4)}</div>
                         </td>
                 `;
 
-                // 严格按照 dimensions 数组的当前顺序动态拼装每一格单元格
                 dimensions.forEach(dim => {
                     let val = house.values[dim.id] !== undefined ? house.values[dim.id] : '';
                     
@@ -304,7 +334,6 @@
                             </td>
                         `;
                     } else {
-                        // 包含数字项、打分制、以及我们新增的带有自定义单位的硬核数值项
                         let isNumeric = (dim.type === 'number' || dim.type === 'custom_value');
                         let inputClass = isNumeric ? 'text-right font-mono font-bold pr-1' : 'text-left';
                         
@@ -356,14 +385,11 @@
             if (house) {
                 house.values[dimId] = (type === 'number' || type === 'custom_value') ? (val === '' ? '' : parseFloat(val)) : val;
                 saveData();
-                // 仅在输入带有单位时重新渲染以实时挂载后缀
                 if(type === 'custom_value' || type === 'number') renderMatrix();
             }
         }
 
-        // --- 🌟 双向拖拽绑定系统（支持行上下拖拽、列左右拖拽） ---
         function setupDragAndDrop() {
-            // 1. 行排序 (房源上下拖拽)
             Sortable.create(document.getElementById('houseMatrixBody'), {
                 animation: 150, 
                 handle: 'td:first-child',
@@ -379,10 +405,9 @@
                 }
             });
 
-            // 2. 列排序 (表头维度左右拖拽)
             Sortable.create(document.getElementById('dimensionHeader'), {
                 animation: 150,
-                draggable: 'th[data-dim-id]', // 锁定只有带数据维度的可以拖，排除第一列房源和最后一列操作列
+                draggable: 'th[data-dim-id]', 
                 ghostClass: 'drag-ghost',
                 onEnd: () => {
                     let reorderedDim = [];
@@ -390,15 +415,13 @@
                         let dId = th.getAttribute('data-dim-id');
                         reorderedDim.push(dimensions.find(d => d.id === dId));
                     });
-                    // 把不带 data-dim-id 的维度（被删掉的或者不需要排的）安全过滤，更新数据
                     dimensions = reorderedDim.filter(Boolean);
                     saveData();
-                    renderMatrix(); // 列位置重新洗牌，强制全面重绘视图
+                    renderMatrix(); 
                 }
             });
         }
 
-        // --- 弹窗管理与提交 ---
         function openModal(id) {
             document.getElementById(id).classList.remove('hidden');
             document.getElementById(id).classList.add('flex');
@@ -435,7 +458,7 @@
             });
             saveData(); 
             renderMatrix(); 
-            setupDragAndDrop(); // 重新刷新拖拽配置
+            setupDragAndDrop(); 
             closeModal('addDimModal');
             document.getElementById('modalDimName').value = '';
             document.getElementById('modalDimUnit').value = '';
@@ -443,8 +466,8 @@
 
         function submitHouse() {
             let name = document.getElementById('modalHouseName').value.trim();
-            let lat = parseFloat(document.getElementById('modalHouseLat').value) || 31.23;
-            let lng = parseFloat(document.getElementById('modalHouseLng').value) || 121.49;
+            let lat = parseFloat(document.getElementById('modalHouseLat').value) || 40.1492;
+            let lng = parseFloat(document.getElementById('modalHouseLng').value) || 116.2885;
             if(!name) return;
             let values = {};
             document.querySelectorAll('.modal-dyn-input').forEach(i => {
@@ -464,13 +487,13 @@
 
         function runAIEvaluation() {
             const out = document.getElementById('aiOutputArea');
-            out.innerHTML = '<div class="text-center py-6 animate-pulse text-gray-400">正在综合判定...</div>';
+            out.innerHTML = '<div class="text-center py-6 animate-pulse text-gray-400">正在对比沙河核心圈距离...</div>';
             setTimeout(() => {
                 if(houses.length === 0) { out.innerHTML = '无数据'; return; }
                 out.innerHTML = `
                     <div class="bg-[#EFD3D7]/50 p-3 rounded-xl border border-[#EFD3D7]">
-                        <h4 class="font-bold text-gray-700">🥇 AI 视图布局就绪</h4>
-                        已成功锁定您的首选维度矩阵。你可以随意进行双向调序，系统将在下一次评估中深度融合您的数据单元！
+                        <h4 class="font-bold text-gray-700">🥇 沙河生活圈锚点已确立</h4>
+                        当前列表中房源已自动关联地图。建议在“扩充维度”中增加纯数值维度（单位设为 km 或 min），手动录入从各房源到学校或地铁站的实测距离，以便获得更精准的决策支撑！
                     </div>
                 `;
             }, 500);
