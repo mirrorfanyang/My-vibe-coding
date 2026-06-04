@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>看房神器 - 决策矩阵 V3.7.1 简化功能板块</title>
+    <title>看房神器 - 决策矩阵 V3.7.2 修复导出乱码</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -48,7 +48,7 @@
         <div>
             <h1 class="text-xl font-bold tracking-tight text-[#4A4E69] flex items-center gap-1.5">
                 <i data-lucide="smartphone" class="w-5 h-5 text-[#8E9AAF]"></i>
-                租房信息搜集与分享 <span class="text-[10px] font-normal px-2 py-0.5 bg-[#4A4E69] text-white rounded-full">V3.7.1 简化功能板块</span>
+                租房信息搜集与分享 <span class="text-[10px] font-normal px-2 py-0.5 bg-[#4A4E69] text-white rounded-full">V3.7.2 修复导出乱码</span>
             </h1>
             <p class="text-[10px] text-gray-400 mt-0.5"> 已优化视图布局，点击眼睛图标导出分享版。</p>
         </div>
@@ -619,7 +619,7 @@
             
             const toRemove = bodyClone.querySelectorAll('button, input[type="file"], .drag-handle, i[data-lucide], .cursor-move');
             toRemove.forEach(el => el.remove());
-            
+
             const inputs = bodyClone.querySelectorAll('input');
             inputs.forEach(input => {
                 const span = document.createElement('span');
@@ -628,19 +628,26 @@
                 input.parentNode.replaceChild(span, input);
             });
 
-            const scriptTag = '<scr' + 'ipt src="https://cdn.tailwindcss.com"></scr' + 'ipt>';
+            const scriptPart = '<scr' + 'ipt src="https://cdn.tailwindcss.com"></scr' + 'ipt>';
             
             const htmlContent = `<!DOCTYPE html>
             <html lang="zh-CN">
-            <head>${scriptTag}</head>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                ${scriptPart}
+            </head>
             <body class="p-6 bg-[#F4F3EF]">${bodyClone.innerHTML}</body>
             </html>`;
 
             const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'house_view_readonly.html';
+            a.href = url;
+            a.download = 'house_view_archive.html';
             a.click();
+
+            URL.revokeObjectURL(url);
         }
 
     </script>
