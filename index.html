@@ -29,9 +29,15 @@
     </style>
 </head>
 
-<div id="imageLightbox" class="fixed inset-0 bg-black/90 hidden z-[100] flex justify-center items-center p-4" onclick="closeLightbox()">
-    <img id="lightboxImg" src="" class="max-w-full max-h-full object-contain rounded-lg">
-    <button class="absolute top-5 right-5 text-white/50 hover:text-white"><i data-lucide="x" class="w-8 h-8"></i></button>
+<div id="imageLightbox" class="fixed inset-0 bg-black/95 hidden z-[100] flex justify-center items-center p-4" onclick="closeLightbox()">
+    <img id="lightboxImg" class="max-w-full max-h-full object-contain rounded-lg" onclick="event.stopPropagation()">
+    
+    <button class="absolute left-4 text-white/70 hover:text-white" onclick="event.stopPropagation(); changeImage(-1)">
+        <i data-lucide="chevron-left" class="w-10 h-10"></i>
+    </button>
+    <button class="absolute right-4 text-white/70 hover:text-white" onclick="event.stopPropagation(); changeImage(1)">
+        <i data-lucide="chevron-right" class="w-10 h-10"></i>
+    </button>
 </div>
 
 <body class="p-3 md:p-6 min-h-screen flex flex-col gap-4 max-w-7xl mx-auto">
@@ -165,19 +171,42 @@
         let houses = [];
         let db, map, markers = {};
 
-        function openLightbox(imgSrc) {
+        // --- 模态框控制系统 ---
+
+        // 全局变量：用于记住当前打开的房源有哪些图，以及看到第几张了
+        let currentLightboxData = { images: [], index: 0 };
+
+        // 打开大图模态框
+        function openLightbox(images, index) {
+            currentLightboxData = { images, index };
             const lightbox = document.getElementById('imageLightbox');
             const img = document.getElementById('lightboxImg');
-            img.src = imgSrc;
+            img.src = images[index];
             lightbox.classList.remove('hidden');
             lightbox.classList.add('flex');
+            
+            // 确保图标加载，因为我们加了箭头
+            lucide.createIcons(); 
         }
 
+        // 切换图片 (上一张/下一张)
+        function changeImage(direction) {
+            let { images, index } = currentLightboxData;
+            // 循环切换逻辑：如果到头了，自动回到第一张；如果是第一张，点左键回最后一张
+            index = (index + direction + images.length) % images.length;
+            
+            currentLightboxData.index = index;
+            document.getElementById('lightboxImg').src = images[index];
+        }
+
+        // 关闭模态框
         function closeLightbox() {
             const lightbox = document.getElementById('imageLightbox');
             lightbox.classList.add('hidden');
             lightbox.classList.remove('flex');
         }
+
+        // --- 模态框系统结束 ---
         
         function initStorage() {
             const request = indexedDB.open("VibeHousingDB", 1);
@@ -343,11 +372,10 @@ function renderCell(house, dim) {
     
     return `<td class="p-2 text-xs">
         <div class="flex flex-wrap gap-1">
-            // 修改 renderCell 中的 map 部分
             ${images.map((img, idx) => `
                 <img src="${img}" 
                     class="w-12 h-10 object-cover rounded-lg border cursor-pointer hover:ring-2 hover:ring-[#8E9AAF]" 
-                    onclick="event.stopPropagation(); openLightbox('${img}')">
+                    onclick="event.stopPropagation(); openLightbox(${JSON.stringify(images).replace(/"/g, "'")}, ${idx})">
             `).join('')}
             <label class="flex items-center justify-center bg-gray-100 px-2 py-1 rounded-md text-[10px] cursor-pointer min-w-[40px]">
                 <i data-lucide="plus" class="w-3 h-3"></i>
