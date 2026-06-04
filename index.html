@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>看房神器 - 决策矩阵 V3.7.2 修复导出乱码</title>
+    <title>看房神器 - 决策矩阵 V3.7.3 分享测试版</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -48,9 +48,9 @@
         <div>
             <h1 class="text-xl font-bold tracking-tight text-[#4A4E69] flex items-center gap-1.5">
                 <i data-lucide="smartphone" class="w-5 h-5 text-[#8E9AAF]"></i>
-                租房信息搜集与分享 <span class="text-[10px] font-normal px-2 py-0.5 bg-[#4A4E69] text-white rounded-full">V3.7.2 修复导出乱码</span>
+                租房信息搜集（本地版） <span class="text-[10px] font-normal px-2 py-0.5 bg-[#4A4E69] text-white rounded-full">V3.7.3 分享测试版</span>
             </h1>
-            <p class="text-[10px] text-gray-400 mt-0.5"> 已优化视图布局，点击眼睛图标导出分享版。</p>
+            <p class="text-[10px] text-gray-400 mt-0.5"> 💡 提示：下载“备份文件”，手机端打开后点击“上传”按钮，选择文件即可同步数据。</p>
         </div>
 
         <div class="flex gap-2 w-full sm:w-auto">
@@ -82,9 +82,9 @@
             <div class="bg-white rounded-3xl p-4 shadow-xs border border-gray-100 flex flex-col gap-3 overflow-hidden">
                 <div class="flex justify-between items-center px-1">
                     <h2 class="text-sm font-bold text-[#4A4E69] flex items-center gap-1.5">
-                        <i data-lucide="grid" class="w-4 h-4"></i> 信息搜集与决策矩阵
+                        <i data-lucide="grid" class="w-4 h-4"></i> 信息搜集
                     </h2>
-                    <span class="text-[10px] text-gray-400">💡 提示：点击房源下方的“纬/经”数值可直接输入二次修改，地图标记会同步跟随移动。</span>
+                    <span class="text-[10px] text-gray-400">💡 提示：点击房源下方“纬/经”数值可直接输入经纬度，地图标记会同步跟随移动。</span>
                 </div>
 
                 <div class="overflow-x-auto no-scrollbar">
@@ -105,14 +105,14 @@
     <div id="addHouseModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden justify-center items-center z-50 p-4">
         <div class="bg-white rounded-2xl p-5 max-w-sm w-full shadow-xl flex flex-col gap-3">
             <h3 class="text-sm font-bold text-[#4A4E69]">新增待选房源</h3>
-            <input type="text" id="modalHouseName" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none" placeholder="房源简称 (如: 静安区LOFT)">
+            <input type="text" id="modalHouseName" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none" placeholder="房源简称 (如: 朝阳区LOFT)">
             <div class="grid grid-cols-2 gap-2">
                 <div>
-                    <label class="text-[10px] text-gray-400 block mb-0.5">纬度 (可从高德复制)</label>
+                    <label class="text-[10px] text-gray-400 block mb-0.5">纬度</label>
                     <input type="number" step="0.000001" id="modalHouseLat" class="w-full px-3 py-1.5 border border-gray-200 rounded-xl text-xs" value="31.2397">
                 </div>
                 <div>
-                    <label class="text-[10px] text-gray-400 block mb-0.5">经度 (可从高德复制)</label>
+                    <label class="text-[10px] text-gray-400 block mb-0.5">经度</label>
                     <input type="number" step="0.000001" id="modalHouseLng" class="w-full px-3 py-1.5 border border-gray-200 rounded-xl text-xs" value="121.4997">
                 </div>
             </div>
@@ -131,7 +131,7 @@
             
             <select id="modalDimType" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs bg-white" onchange="handleDimTypeChange()">
                 <option value="number">打分制 (0-100分)</option>
-                <option value="custom_value">硬核数值项 (可自设单位)</option>
+                <option value="custom_value">硬核数值项 (可设单位)</option>
                 <option value="text">纯文字备注</option>
                 <option value="media">独立现场照片项</option>
             </select>
