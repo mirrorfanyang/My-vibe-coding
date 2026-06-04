@@ -304,39 +304,49 @@
                 dimensions.forEach(dim => {
                     let val = house.values[dim.id] !== undefined ? house.values[dim.id] : '';
                     
-                if (dim.type === 'media') {
-                        // 🌟 核心升级：兼容老数据，确保 val 是一个图片数组
-                        let imgList = [];
-                        if (val) {
-                            imgList = Array.isArray(val) ? val : [val];
-                        }
-
-                        // 生成横向滚动多图画廊的 HTML
-                        let imgGalleryHtml = '';
-                        if (imgList.length > 0) {
-                            imgGalleryHtml = `<div class="flex gap-1 overflow-x-auto py-1 max-w-[130px] scrollbar-none">`;
-                            imgList.forEach((imgSrc, index) => {
-                                imgGalleryHtml += `
-                                    <div class="relative shrink-0 group/img">
-                                        <img src="${imgSrc}" class="w-10 h-10 object-cover rounded-md border border-gray-100 shadow-2xs cursor-pointer" onclick="viewFullScreenImage('${house.id}', '${dim.id}', ${index})">
-                                        <button class="absolute -top-1 -right-1 bg-rose-500 text-white rounded-full w-3.5 h-3.5 text-[9px] flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity" onclick="event.stopPropagation(); deleteSingleImage('${house.id}', '${dim.id}', ${index})">×</button>
-                                    </div>`;
-                            });
-                            imgGalleryHtml += `</div><div class="text-[8px] text-gray-400 mb-0.5">${imgList.length} 张照片</div>`;
-                        }
-
+                    if (dim.type === 'media') {
+                        // 🌟 修改：取消了旧版强制调用相机的 capture 限制，使其可以自选微信相册图片
                         rowHtml += `
                             <td class="p-2 text-xs">
                                 <div class="flex flex-col gap-1">
-                                    ${imgGalleryHtml}
+                                    ${val ? `<img src="${val}" class="w-16 h-12 object-cover rounded-lg border border-gray-100 shadow-2xs cursor-pointer" onclick="viewFullImage('${val}')">` : ''}
                                     <label class="flex items-center justify-center gap-1 bg-gray-100 active:bg-gray-200 text-gray-600 px-2 py-1 rounded-md text-[10px] cursor-pointer transition">
-                                        <i data-lucide="image" class="w-3 h-3"></i> ${imgList.length > 0 ? '加照片' : '传图片'}
-                                        <input type="file" accept="image/*" multiple onchange="captureMultipleMedia(this, '${house.id}', '${dim.id}')" class="hidden">
+                                        <i data-lucide="image" class="w-3 h-3"></i> ${val ? '更换' : '传图片'}
+                                        <input type="file" accept="image/*" onchange="captureMedia(this, '${house.id}', '${dim.id}', 'image')" class="hidden">
                                     </label>
                                 </div>
                             </td>
                         `;
+                    } else if (dim.type === 'video') {
+                        rowHtml += `
+                            <td class="p-2 text-xs">
+                                <div class="flex flex-col gap-1">
+                                    ${val ? `<video src="${val}" class="w-16 h-12 object-cover rounded-lg border" controls></video>` : ''}
+                                    <label class="flex items-center justify-center gap-1 bg-gray-100 active:bg-gray-200 text-gray-600 px-2 py-1 rounded-md text-[10px] cursor-pointer transition">
+                                        <i data-lucide="video" class="w-3 h-3"></i> ${val ? '重录' : '录视频'}
+                                        <input type="file" accept="video/*" onchange="captureMedia(this, '${house.id}', '${dim.id}', 'video')" class="hidden">
+                                    </label>
+                                </div>
+                            </td>
+                        `;
+                    } else {
+                        let isNumeric = (dim.type === 'number' || dim.type === 'custom_value');
+                        let inputClass = isNumeric ? 'text-right font-mono font-bold pr-1' : 'text-left';
+                        
+                        rowHtml += `
+                            <td class="p-2 text-xs">
+                                <div class="flex items-center border-b border-transparent focus-within:border-[#8E9AAF] px-1 py-1">
+                                    <input type="${isNumeric ? 'number' : 'text'}" 
+                                           step="any"
+                                           value="${val}" 
+                                           class="w-full bg-transparent focus:outline-none ${inputClass}"
+                                           onchange="updateValue('${house.id}', '${dim.id}', this.value, '${dim.type}')" placeholder="-">
+                                    ${(dim.unit && val !== '') ? `<span class="text-[9px] text-gray-400 font-normal pl-0.5">${dim.unit}</span>` : ''}
+                                </div>
+                            </td>
+                        `;
                     }
+                });
 
                 rowHtml += `
                         <td class="p-2 text-center">
@@ -350,12 +360,7 @@
             lucide.createIcons();
         }
 
-function captureMedia(input, houseId, dimId, type) {
-            // 🌟 核心防御补丁：如果是传图片，为了防止老函数把多图数组冲掉，自动分流到多图函数
-            if (type === 'image') {
-                captureMultipleMedia(input, houseId, dimId);
-                return;
-            }
+        function captureMedia(input, houseId, dimId, type) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
@@ -371,66 +376,6 @@ function captureMedia(input, houseId, dimId, type) {
             }
         }
 
-        // 🌟 新增函数一：支持多图批量上传并追加入库（对齐 saveData）
-        function captureMultipleMedia(inputElement, houseId, dimId) {
-            const files = inputElement.files;
-            if (!files || files.length === 0) return;
-
-            const house = houses.find(h => h.id === houseId);
-            if (!house) return;
-
-            // 如果该位置原本没有数据或者不是数组（兼容老数据），初始化为数组
-            if (!house.values[dimId] || !Array.isArray(house.values[dimId])) {
-                house.values[dimId] = house.values[dimId] ? [house.values[dimId]] : [];
-            }
-
-            let loadedCount = 0;
-            Array.from(files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const base64String = e.target.result;
-                    house.values[dimId].push(base64String); // 追加新照片
-                    loadedCount++;
-
-                    if (loadedCount === files.length) {
-                        saveData(); // 🌟 统一对齐你的保存函数
-                        renderMatrix(); // 刷新页面
-                    }
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // 🌟 新增函数二：点击缩略图，手机端和电脑端全屏高清看图
-        function viewFullScreenImage(houseId, dimId, imgIndex) {
-            const house = houses.find(h => h.id === houseId);
-            if (!house || !house.values[dimId]) return;
-            
-            const imgList = Array.isArray(house.values[dimId]) ? house.values[dimId] : [house.values[dimId]];
-            const imgSrc = imgList[imgIndex];
-            
-            const mask = document.createElement('div');
-            mask.className = 'fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 cursor-zoom-out';
-            mask.innerHTML = `<img src="${imgSrc}" class="max-w-full max-h-full rounded-md object-contain shadow-2xl">`;
-            mask.onclick = () => mask.remove();
-            document.body.appendChild(mask);
-        }
-
-        // 🌟 新增函数三：点击小红叉，单独删除多图中的某一张
-        function deleteSingleImage(houseId, dimId, imgIndex) {
-            if (!confirm('确定要删除这张照片吗？')) return;
-            const house = houses.find(h => h.id === houseId);
-            if (!house || !house.values[dimId] || !Array.isArray(house.values[dimId])) return;
-            
-            house.values[dimId].splice(imgIndex, 1); // 剔除图片
-            if (house.values[dimId].length === 0) {
-                house.values[dimId] = ''; // 删光了就恢复为空
-            }
-            
-            saveData(); // 🌟 统一对齐你的保存函数
-            renderMatrix();
-        }
-
         function updateValue(houseId, dimId, val, type) {
             const house = houses.find(h => h.id === houseId);
             if (house) {
@@ -443,7 +388,7 @@ function captureMedia(input, houseId, dimId, type) {
         function setupDragAndDrop() {
             Sortable.create(document.getElementById('houseMatrixBody'), {
                 animation: 150, 
-                handle: '.drag-handle', 
+                handle: 'td:first-child font-bold', // 限制通过房源名字区域拖拽，防止干扰经纬度输入框选择
                 ghostClass: 'drag-ghost',
                 delay: 200,
                 delayOnTouchOnly: true,
@@ -548,7 +493,7 @@ function captureMedia(input, houseId, dimId, type) {
                 out.innerHTML = `
                     <div class="bg-[#EFD3D7]/50 p-3 rounded-xl border border-[#EFD3D7]">
                         <h4 class="font-bold text-gray-700">🥇 动态同步链路建立成功</h4>
-                        经纬度二次编辑与多图画廊功能工作良好，修改即生效并自动同步本地缓存。
+                        经纬度二次编辑功能工作良好，修改即生效并自动同步本地 IndexedDB 缓存。
                     </div>
                 `;
             }, 500);
