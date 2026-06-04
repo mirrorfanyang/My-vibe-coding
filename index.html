@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>看房神器 - 决策矩阵 V3.5.3 多媒体视图优化（删除视频功能）</title>
+    <title>看房神器 - 决策矩阵 V3.6.1 导出备份及恢复上传</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -48,9 +48,9 @@
         <div>
             <h1 class="text-xl font-bold tracking-tight text-[#4A4E69] flex items-center gap-1.5">
                 <i data-lucide="smartphone" class="w-5 h-5 text-[#8E9AAF]"></i>
-                租房看房神器 <span class="text-[10px] font-normal px-2 py-0.5 bg-[#4A4E69] text-white rounded-full">V3.4 坐标修改与相册图存版</span>
+                租房看房神器 <span class="text-[10px] font-normal px-2 py-0.5 bg-[#4A4E69] text-white rounded-full">V3.6.1 导出备份及恢复上传</span>
             </h1>
-            <p class="text-xs text-gray-500 mt-0.5">可以直接在表格内修改经纬度让地图联动。开放了手机相册，支持看房前提前存入中介参考图。</p>
+            <p class="text-xs text-gray-500 mt-0.5">测试导出备份及恢复上传功能，避免缓存只能储存在浏览器中导致的数据丢失风险。</p>
         </div>
         <div class="flex gap-2 w-full sm:w-auto">
             <button onclick="openModal('addHouseModal')" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-[#8E9AAF] hover:bg-[#7A869A] text-white px-3 py-2 rounded-xl text-xs font-medium cursor-pointer transition">
@@ -59,6 +59,14 @@
             <button onclick="openModal('addDimModal')" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-[#CBC0D3] hover:bg-[#B8A9C3] text-[#4A4E69] px-3 py-2 rounded-xl text-xs font-medium cursor-pointer transition">
                 <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> 扩充维度
             </button>
+            
+            <button onclick="exportData()" class="flex-none flex items-center justify-center px-2 py-2 bg-white/50 border border-[#8E9AAF]/20 rounded-xl hover:bg-white transition" title="备份数据">
+                <i data-lucide="download" class="w-4 h-4 text-[#4A4E69]"></i>
+            </button>
+            <button onclick="document.getElementById('importFile').click()" class="flex-none flex items-center justify-center px-2 py-2 bg-white/50 border border-[#8E9AAF]/20 rounded-xl hover:bg-white transition" title="恢复数据">
+                <i data-lucide="upload" class="w-4 h-4 text-[#4A4E69]"></i>
+            </button>
+            <input type="file" id="importFile" class="hidden" onchange="handleFile(this)">
         </div>
     </header>
 
@@ -71,7 +79,7 @@
             <div class="bg-white rounded-3xl p-4 shadow-xs border border-gray-100 flex flex-col gap-3 overflow-hidden">
                 <div class="flex justify-between items-center px-1">
                     <h2 class="text-sm font-bold text-[#4A4E69] flex items-center gap-1.5">
-                        <i data-lucide="grid" class="w-4 h-4"></i> 看板式决策矩阵
+                        <i data-lucide="grid" class="w-4 h-4"></i> 信息搜集与决策矩阵
                     </h2>
                     <span class="text-[10px] text-gray-400">💡 提示：点击房源下方的“纬/经”数值可直接输入二次修改，地图标记会同步跟随移动。</span>
                 </div>
@@ -235,7 +243,44 @@
             store.put({ key: "dimensions", value: dimensions });
             store.put({ key: "houses", value: houses });
         }
+        
+        // 备份数据：提取整个数据库内容并下载
+        function exportData() {
+            const backup = {
+                dimensions: dimensions,
+                houses: houses
+            };
+            const dataStr = JSON.stringify(backup);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'house_data_backup.json';
+            a.click();
+        }
 
+        // 恢复数据：解析文件并存入数据库
+        function handleFile(input) {
+            if (!input.files[0]) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const backup = JSON.parse(e.target.result);
+                    // 更新当前内存变量
+                    dimensions = backup.dimensions;
+                    houses = backup.houses;
+                    
+                    // 保存回 IndexedDB
+                    saveData();
+                    
+                    alert('数据恢复成功！页面即将刷新。');
+                    location.reload();
+                } catch (err) {
+                    alert('文件格式错误或已损坏，无法恢复。');
+                }
+            };
+            reader.readAsText(input.files[0]);
+        }
+        
         function loadLocalData() {
             const tx = db.transaction("appData", "readonly");
             const store = tx.objectStore("appData");
