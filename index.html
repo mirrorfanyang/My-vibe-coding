@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>看房神器 - 决策矩阵 V3.7.3 分享测试版</title>
+    <title>看房神器 - 决策矩阵 V3.7.4 分享测试版</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -48,7 +48,7 @@
         <div>
             <h1 class="text-xl font-bold tracking-tight text-[#4A4E69] flex items-center gap-1.5">
                 <i data-lucide="smartphone" class="w-5 h-5 text-[#8E9AAF]"></i>
-                租房信息搜集（本地版） <span class="text-[10px] font-normal px-2 py-0.5 bg-[#4A4E69] text-white rounded-full">V3.7.3 分享测试版</span>
+                租房信息搜集（本地版） <span class="text-[10px] font-normal px-2 py-0.5 bg-[#4A4E69] text-white rounded-full">V3.7.4 分享测试版</span>
             </h1>
             <p class="text-[10px] text-gray-400 mt-0.5"> 💡 提示：下载“备份文件”，手机端打开后点击“上传”按钮，选择文件即可同步数据。</p>
         </div>
@@ -254,11 +254,13 @@
                 try {
                     const backup = JSON.parse(e.target.result);
                     
-                    // 关键修改：只更新房源数据，不更新 dimensions！
-                    // 这样无论备份文件里是什么，都会保留你代码里写好的最新表头
-                    houses = backup.houses; 
+                    houses = backup.houses || [];
                     
-                    // 保存回 IndexedDB (此时保存的是新的 dimensions 和旧的房源数据)
+                    if (backup.dimensions && backup.dimensions.length > 0) {
+                        dimensions = backup.dimensions;
+                    }
+                    
+                    // 保存回 IndexedDB
                     saveData();
                     
                     alert('数据恢复成功！页面即将刷新。');
