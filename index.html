@@ -644,7 +644,6 @@
                 input.parentNode.replaceChild(span, input);
             });
 
-            // 修复：将 </script> 拆开，防止被解析器误认为是代码块结束
             const scriptTag = '<scr' + 'ipt src="https://cdn.tailwindcss.com"></scr' + 'ipt>';
             
             const htmlContent = `<!DOCTYPE html>
