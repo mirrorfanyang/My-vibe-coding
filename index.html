@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>看房神器 - 决策矩阵 V3.1</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --morandi-bg: #F4F3EF;
+            --morandi-primary: #8E9AAF;
+            --morandi-secondary: #CBC0D3;
+            --morandi-accent: #EFD3D7;
+            --morandi-dark: #4A4E69;
+        }
+        body {
+            background-color: var(--morandi-bg);
+            color: var(--morandi-dark);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .drag-ghost { opacity: 0.4; background: var(--morandi-accent) !important; }
+    </style>
+</head>
+<body class="p-3 md:p-6 min-h-screen flex flex-col gap-4 max-w-7xl mx-auto">
+
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white/70 backdrop-blur-md p-5 rounded-3xl shadow-xs border border-white/40">
+        <div>
+            <h1 class="text-xl font-bold tracking-tight text-[#4A4E69] flex items-center gap-1.5">
+                <i data-lucide="smartphone" class="w-5 h-5 text-[#8E9AAF]"></i>
+                租房看房神器 <span class="text-[10px] font-normal px-2 py-0.5 bg-[#EFD3D7] text-[#4A4E69] rounded-full">V3.1 极速兼容版</span>
+            </h1>
+            <p class="text-xs text-gray-500 mt-0.5">支持手机拍照/录像，解决苹果iOS首屏拦截白屏问题。</p>
+        </div>
+        <div class="flex gap-2 w-full sm:w-auto">
+            <button onclick="openModal('addHouseModal')" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-[#8E9AAF] hover:bg-[#7A869A] text-white px-3 py-2 rounded-xl text-xs font-medium cursor-pointer transition">
+                <i data-lucide="home" class="w-3.5 h-3.5"></i> 新增房源
+            </button>
+            <button onclick="openModal('addDimModal')" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-[#CBC0D3] hover:bg-[#B8A9C3] text-[#4A4E69] px-3 py-2 rounded-xl text-xs font-medium cursor-pointer transition">
+                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> 扩充维度
+            </button>
+        </div>
+    </header>
+
+    <main class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1">
+        <div class="lg:col-span-2 flex flex-col gap-4">
+            <div class="bg-white rounded-3xl p-3 shadow-xs border border-gray-100 flex flex-col gap-2">
+                <div id="map" class="w-full h-48 rounded-2xl z-10 shadow-inner"></div>
+            </div>
+
+            <div class="bg-white rounded-3xl p-4 shadow-xs border border-gray-100 flex flex-col gap-3 overflow-hidden">
+                <div class="flex justify-between items-center px-1">
+                    <h2 class="text-sm font-bold text-[#4A4E69] flex items-center gap-1.5">
+                        <i data-lucide="grid" class="w-4 h-4"></i> 看板式决策矩阵
+                    </h2>
+                    <span class="text-[10px] text-gray-400">长按房源名称可上下拖拽排序</span>
+                </div>
+
+                <div class="overflow-x-auto no-scrollbar">
+                    <table class="min-w-full divide-y divide-gray-100">
+                        <thead>
+                            <tr id="dimensionHeader" class="bg-gray-50/60 rounded-xl">
+                                <th class="p-3 text-left text-xs font-semibold text-gray-500 w-44 rounded-l-xl">目标房源</th>
+                            </tr>
+                        </thead>
+                        <tbody id="houseMatrixBody" class="divide-y divide-gray-100 bg-white">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-1 flex flex-col bg-white rounded-3xl p-4 shadow-xs border border-gray-100 max-h-[75vh]">
+            <div class="flex justify-between items-center border-b border-gray-100 pb-3 mb-3">
+                <h3 class="text-sm font-bold text-[#4A4E69] flex items-center gap-1"><i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i> 本地 AI 研判顾问</h3>
+                <button onclick="runAIEvaluation()" class="bg-[#4A4E69] text-white text-[11px] px-2.5 py-1.5 rounded-lg font-medium cursor-pointer">启动综合评估</button>
+            </div>
+            <div id="aiOutputArea" class="flex-1 overflow-y-auto no-scrollbar text-xs text-gray-600 space-y-3">
+                <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed">
+                    拿着手机去实地看房吧！点击矩阵对应格子的<b>【📸 拍房间】</b>或<b>【📹 录视频】</b>，多媒体文件会直接采用高级二进制数据块(Blob)保存在你手机本地。
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="addHouseModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-2xl p-5 max-w-sm w-full shadow-xl flex flex-col gap-3">
+            <h3 class="text-sm font-bold text-[#4A4E69]">新增待选房源</h3>
+            <input type="text" id="modalHouseName" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none" placeholder="房源简称 (如: 静安区LOFT)">
+            <div class="grid grid-cols-2 gap-2">
+                <input type="number" step="0.000001" id="modalHouseLat" class="w-full px-3 py-1.5 border border-gray-200 rounded-xl text-xs" value="39.9042" placeholder="纬度">
+                <input type="number" step="0.000001" id="modalHouseLng" class="w-full px-3 py-1.5 border border-gray-200 rounded-xl text-xs" value="116.4074" placeholder="经度">
+            </div>
+            <div id="modalDynamicValues" class="flex flex-col gap-2 max-h-36 overflow-y-auto"></div>
+            <div class="flex justify-end gap-2 mt-1">
+                <button onclick="closeModal('addHouseModal')" class="text-xs text-gray-400 px-3 py-1.5">取消</button>
+                <button onclick="submitHouse()" class="bg-[#8E9AAF] text-white text-xs px-4 py-1.5 rounded-xl">确认添加</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addDimModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-2xl p-5 max-w-xs w-full shadow-xl flex flex-col gap-3">
+            <h3 class="text-sm font-bold text-[#4A4E69]">扩充评价维度</h3>
+            <input type="text" id="modalDimName" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none" placeholder="维度名称 (如: 隔音效果)">
+            <select id="modalDimType" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs bg-white" onchange="toggleWeightInput()">
+                <option value="number">打分制 (0-100分)</option>
+                <option value="text">纯文字备注</option>
+                <option value="media">独立现场照片项</option>
+                <option value="video">独立现场短视频项</option>
+            </select>
+            <div id="weightContainer">
+                <select id="modalDimWeight" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs bg-white">
+                    <option value="5">⭐⭐⭐⭐⭐ (极度看重)</option>
+                    <option value="3" selected>⭐⭐⭐ (普通考量)</option>
+                    <option value="1">⭐ (可有可无)</option>
+                </select>
+            </div>
+            <div class="flex justify-end gap-2 mt-1">
+                <button onclick="closeModal('addDimModal')" class="text-xs text-gray-400 px-3 py-1.5">取消</button>
+                <button onclick="submitDimension()" class="bg-[#CBC0D3] text-[#4A4E69] text-xs px-4 py-1.5 rounded-xl">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let dimensions = [
+            { id: 'price', name: '月租金/预算', type: 'number', weight: 5 },
+            { id: 'commute', name: '通勤时间(分钟)', type: 'number', weight: 4 },
+            { id: 'photos', name: '📸 房间照片实景', type: 'media', weight: 1 },
+            { id: 'video', name: '📹 现场视频拷问', type: 'video', weight: 1 }
+        ];
+        let houses = [];
+        let db = null, map = null, markers = {};
+
+        // --- 安全垫设计：如果浏览器不支持或拒绝IndexedDB，降级到localStorage或内存运作，防死锁白屏 ---
+        function initStorage() {
+            try {
+                const request = indexedDB.open("VibeHousingDB", 1);
+                request.onupgradeneeded = (e) => {
+                    let database = e.target.result;
+                    if (!database.objectStoreNames.contains("appData")) {
+                        database.createObjectStore("appData", { keyPath: "key" });
+                    }
+                };
+                request.onsuccess = (e) => {
+                    db = e.target.result;
+                    loadLocalData();
+                };
+                request.onerror = () => {
+                    console.log("IndexedDB被拒绝，启动localStorage备用方案");
+                    loadFallbackData();
+                };
+            } catch(err) {
+                console.log("沙盒不支持环境，直接进入应急模式");
+                loadFallbackData();
+            }
+        }
+
+        function saveData() {
+            if (db) {
+                try {
+                    const tx = db.transaction("appData", "readwrite");
+                    const store = tx.objectStore("appData");
+                    store.put({ key: "dimensions", value: dimensions });
+                    store.put({ key: "houses", value: houses });
+                    return;
+                } catch(e) { console.log(e); }
+            }
+            // 降级保存
+            localStorage.setItem("vibe_dimensions", JSON.stringify(dimensions));
+            localStorage.setItem("vibe_houses", JSON.stringify(houses));
+        }
+
+        function loadLocalData() {
+            const tx = db.transaction("appData", "readonly");
+            const store = tx.objectStore("appData");
+            
+            const reqDim = store.get("dimensions");
+            reqDim.onsuccess = () => {
+                if(reqDim.result) dimensions = reqDim.result.value;
+                const reqHouses = store.get("houses");
+                reqHouses.onsuccess = () => {
+                    if(reqHouses.result) houses = reqHouses.result.value;
+                    finalizeInitialization();
+                };
+            };
+            reqDim.onerror = () => loadFallbackData();
+        }
+
+        function loadFallbackData() {
+            let localDim = localStorage.getItem("vibe_dimensions");
+            let localHouses = localStorage.getItem("vibe_houses");
+            if(localDim) dimensions = JSON.parse(localDim);
+            if(localHouses) houses = JSON.parse(localHouses);
+            finalizeInitialization();
+        }
+
+        function finalizeInitialization() {
+            if(houses.length === 0) {
+                houses = [
+                    { id: 'h1', name: '💡 样板房：陆家嘴次卧', lat: 31.2397, lng: 121.4997, values: { price: 4500, commute: 25 } }
+                ];
+            }
+            initMap();
+            renderMatrix();
+            setupDragAndDrop();
+        }
+
+        // --- 地图模块 ---
+        function initMap() {
+            if (map) return;
+            try {
+                map = L.map('map', { zoomControl: false }).setView([31.23, 121.49], 11);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+                updateMapMarkers();
+            } catch(e) {
+                console.log("地图组件加载冲突:", e);
+            }
+        }
+
+        function updateMapMarkers() {
+            if(!map) return;
+            Object.values(markers).forEach(m => map.removeLayer(m));
+            markers = {};
+            houses.forEach(h => {
+                if(h.lat && h.lng) {
+                    const marker = L.marker([h.lat, h.lng]).addTo(map).bindPopup(`<b>${h.name}</b>`);
+                    markers[h.id] = marker;
+                }
+            });
+            if (houses.length > 0 && Object.keys(markers).length > 0) {
+                const group = new L.featureGroup(Object.values(markers));
+                map.fitBounds(group.getBounds().pad(0.3));
+            }
+        }
+
+        function focusHouse(id) {
+            const house = houses.find(h => h.id === id);
+            if (house && markers[id] && map) {
+                map.setView([house.lat, house.lng], 14, { animate: true });
+                markers[id].openPopup();
+            }
+        }
+
+        // --- 核心矩阵与手机多媒体捕捉渲染逻辑 ---
+        function renderMatrix() {
+            const headerRow = document.getElementById('dimensionHeader');
+            const bodyContainer = document.getElementById('houseMatrixBody');
+            if(!headerRow || !bodyContainer) return;
+
+            headerRow.innerHTML = `<th class="p-3 text-left text-xs font-semibold text-gray-500 w-44 rounded-l-xl">🏡 房源与地理坐标</th>`;
+            dimensions.forEach(dim => {
+                headerRow.innerHTML += `
+                    <th data-dim-id="${dim.id}" class="p-3 text-left text-xs font-semibold text-gray-600 bg-gray-50/60 min-w-[130px]">
+                        <div class="flex items-center justify-between group">
+                            <span>${dim.name}</span>
+                            <i data-lucide="x" class="w-3 h-3 text-rose-400 opacity-0 group-hover:opacity-100 cursor-pointer" onclick="deleteDimension('${dim.id}')"></i>
+                        </div>
+                    </th>
+                `;
+            });
+            headerRow.innerHTML += `<th class="p-2 w-10"></th>`;
+
+            bodyContainer.innerHTML = '';
+            houses.forEach(house => {
+                let rowHtml = `
+                    <tr data-house-id="${house.id}" class="hover:bg-gray-50/40 transition group">
+                        <td class="p-3 text-xs font-medium text-[#4A4E69] cursor-pointer" onclick="focusHouse('${house.id}')">
+                            <div class="font-bold text-[#4A4E69]">${house.name}</div>
+                            <div class="text-[9px] text-gray-400 mt-0.5">📍 ${house.lat ? house.lat.toFixed(3) : 0}, ${house.lng ? house.lng.toFixed(3) : 0}</div>
+                        </td>
+                `;
+
+                dimensions.forEach(dim => {
+                    let val = house.values[dim.id] || '';
+                    
+                    if (dim.type === 'media') {
+                        rowHtml += `
+                            <td class="p-2 text-xs">
+                                <div class="flex flex-col gap-1">
+                                    ${val ? `<img src="${val}" class="w-16 h-12 object-cover rounded-lg border border-gray-100" onclick="viewFullImage('${val}')">` : ''}
+                                    <label class="flex items-center justify-center gap-1 bg-gray-100 active:bg-gray-200 text-gray-600 px-2 py-1 rounded-md text-[10px] cursor-pointer transition">
+                                        <i data-lucide="camera" class="w-3 h-3"></i> ${val ? '重新拍' : '拍房间'}
+                                        <input type="file" accept="image/*" capture="environment" onchange="captureMedia(this, '${house.id}', '${dim.id}', 'image')" class="hidden">
+                                    </label>
+                                </div>
+                            </td>
+                        `;
+                    } else if (dim.type === 'video') {
+                        rowHtml += `
+                            <td class="p-2 text-xs">
+                                <div class="flex flex-col gap-1">
+                                    ${val ? `<video src="${val}" class="w-16 h-12 object-cover rounded-lg border" controls playsinline></video>` : ''}
+                                    <label class="flex items-center justify-center gap-1 bg-gray-100 active:bg-gray-200 text-gray-600 px-2 py-1 rounded-md text-[10px] cursor-pointer transition">
+                                        <i data-lucide="video" class="w-3 h-3"></i> ${val ? '重录' : '录视频'}
+                                        <input type="file" accept="video/*" capture="environment" onchange="captureMedia(this, '${house.id}', '${dim.id}', 'video')" class="hidden">
+                                    </label>
+                                </div>
+                            </td>
+                        `;
+                    } else {
+                        let inputClass = dim.type === 'number' ? 'text-right font-mono font-bold' : 'text-left';
+                        rowHtml += `
+                            <td class="p-2 text-xs">
+                                <input type="${dim.type === 'number' ? 'number' : 'text'}" 
+                                       value="${val}" 
+                                       class="w-full bg-transparent border-b border-transparent focus:border-[#8E9AAF] px-1 py-1 ${inputClass}"
+                                       onchange="updateValue('${house.id}', '${dim.id}', this.value, '${dim.type}')" placeholder="-">
+                            </td>
+                        `;
+                    }
+                });
+
+                rowHtml += `
+                        <td class="p-2 text-center">
+                            <button onclick="deleteHouse('${house.id}')" class="text-gray-300 hover:text-rose-500 transition"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        </td>
+                    </tr>
+                `;
+                bodyContainer.innerHTML += rowHtml;
+            });
+
+            lucide.createIcons();
+        }
+
+        function captureMedia(input, houseId, dimId, type) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const base64Data = e.target.result;
+                    const house = houses.find(h => h.id === houseId);
+                    if(house) {
+                        house.values[dimId] = base64Data;
+                        saveData(); 
+                        renderMatrix();
+                    }
+                };
+                reader.readAsDataURL(input.files[0]); 
+            }
+        }
+
+        function updateValue(houseId, dimId, val, type) {
+            const house = houses.find(h => h.id === houseId);
+            if (house) {
+                house.values[dimId] = type === 'number' ? parseFloat(val) : val;
+                saveData();
+            }
+        }
+
+        function setupDragAndDrop() {
+            let el = document.getElementById('houseMatrixBody');
+            if(!el) return;
+            Sortable.create(el, {
+                animation: 150, handle: 'td:first-child',
+                onEnd: () => {
+                    let reordered = [];
+                    document.querySelectorAll('#houseMatrixBody tr').forEach(tr => {
+                        let hId = tr.getAttribute('data-house-id');
+                        reordered.push(houses.find(h => h.id === hId));
+                    });
+                    houses = reordered;
+                    saveData();
+                }
+            });
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById(id).classList.add('flex');
+            if
