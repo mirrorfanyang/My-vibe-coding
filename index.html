@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>看房神器 - 决策矩阵 V3.5.2 多媒体视图优化（内部锁定后的页码显示）</title>
+    <title>看房神器 - 决策矩阵 V3.5.3 多媒体视图优化（删除视频功能）</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -137,7 +137,6 @@
                 <option value="custom_value">硬核数值项 (可自设单位)</option>
                 <option value="text">纯文字备注</option>
                 <option value="media">独立现场照片项</option>
-                <option value="video">独立现场视频项</option>
             </select>
             
             <div id="unitContainer" class="hidden flex flex-col gap-0.5">
@@ -168,7 +167,6 @@
             { id: 'price', name: '月租金/预算', type: 'number', weight: 5, unit: '元' },
             { id: 'commute', name: '步行通勤时间', type: 'custom_value', weight: 4, unit: 'min' },
             { id: 'photos', name: '📸 房间照片实景', type: 'media', weight: 1 },
-            { id: 'video', name: '📹 现场视频实拍', type: 'video', weight: 1 }
         ];
         let houses = [];
         let db, map, markers = {};
@@ -312,7 +310,7 @@
             } else {
                 unitBox.classList.add('hidden');
             }
-            weightBox.style.display = (type=='media'||type=='video') ? 'none' : 'block';
+            weightBox.style.display = (type === 'media') ? 'none' : 'block';
         }
 
 // 1. 总调度：负责整体框架渲染
@@ -400,7 +398,7 @@
     </td>`;
 }
 
-        function captureMedia(input, houseId, dimId, type) {
+        function captureMedia(input, houseId, dimId) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
@@ -408,18 +406,13 @@
                     const house = houses.find(h => h.id === houseId);
                     
                     if (house) {
-                        // --- 关键修改：支持数组追加 ---
                         let currentData = house.values[dimId];
                         let images = Array.isArray(currentData) ? currentData : (currentData ? [currentData] : []);
-                        
-                        // 将新图加进去
                         images.push(base64Data);
-                        
-                        // 写回数据
                         house.values[dimId] = images;
                         
                         saveData();
-                        renderMatrix(); // 渲染完成后，新图片会自动出现在表格里
+                        renderMatrix(); 
                     }
                 };
                 reader.readAsDataURL(input.files[0]);
@@ -479,7 +472,7 @@
                 const container = document.getElementById('modalDynamicValues');
                 container.innerHTML = '';
                 dimensions.forEach(d => {
-                    if(d.type !== 'media' && d.type !== 'video') {
+                    if(d.type !== 'media') {
                         container.innerHTML += `
                             <div class="flex items-center justify-between border border-gray-100 rounded-lg px-2 py-1.5 bg-gray-50/50">
                                 <span class="text-[11px] text-gray-500">${d.name}</span>
@@ -490,6 +483,7 @@
                 });
             }
         }
+
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
         function submitDimension() {
