@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>看房神器 - 决策矩阵 V3.4 坐标可改与参考图版</title>
+    <title>看房神器 - 决策矩阵 V3.4.1 坐标可改与参考图版</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -123,7 +123,7 @@
                 <option value="custom_value">硬核数值项 (可自设单位)</option>
                 <option value="text">纯文字备注</option>
                 <option value="media">独立现场照片项</option>
-                <option value="video">独立现场短视频项</option>
+                <option value="video">独立现场视频项</option>
             </select>
             
             <div id="unitContainer" class="hidden flex flex-col gap-0.5">
@@ -152,9 +152,9 @@
         let dimensions = [
             { id: 'agent_photos', name: '📋 中介参考/户型图', type: 'media', weight: 1 },
             { id: 'price', name: '月租金/预算', type: 'number', weight: 5, unit: '元' },
-            { id: 'commute', name: '通勤时间', type: 'custom_value', weight: 4, unit: 'min' },
+            { id: 'commute', name: '步行通勤时间', type: 'custom_value', weight: 4, unit: 'min' },
             { id: 'photos', name: '📸 房间照片实景', type: 'media', weight: 1 },
-            { id: 'video', name: '📹 现场视频拷问', type: 'video', weight: 1 }
+            { id: 'video', name: '📹 现场视频实拍', type: 'video', weight: 1 }
         ];
         let houses = [];
         let db, map, markers = {};
@@ -262,7 +262,7 @@
             const headerRow = document.getElementById('dimensionHeader');
             const bodyContainer = document.getElementById('houseMatrixBody');
 
-            headerRow.innerHTML = `<th class="p-3 text-left text-xs font-semibold text-gray-500 w-44 rounded-l-xl cursor-default">🏡 房源与地理坐标 (可打字修改)</th>`;
+            headerRow.innerHTML = `<th class="p-3 text-left text-xs font-semibold text-gray-500 w-44 rounded-l-xl cursor-default">🏡 房源与地理坐标 </th>`;
             dimensions.forEach(dim => {
                 let showName = dim.name + (dim.unit ? ` (${dim.unit})` : '');
                 headerRow.innerHTML += `
