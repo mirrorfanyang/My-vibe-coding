@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>看房神器 - 决策矩阵 V3.6.5 缩短房源列</title>
+    <title>看房神器 - 决策矩阵 V3.6.6 房源名称修改</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -48,7 +48,7 @@
         <div>
             <h1 class="text-xl font-bold tracking-tight text-[#4A4E69] flex items-center gap-1.5">
                 <i data-lucide="smartphone" class="w-5 h-5 text-[#8E9AAF]"></i>
-                租房看房神器 <span class="text-[10px] font-normal px-2 py-0.5 bg-[#4A4E69] text-white rounded-full">V3.6.5 缩短房源列</span>
+                租房看房神器 <span class="text-[10px] font-normal px-2 py-0.5 bg-[#4A4E69] text-white rounded-full">V3.6.6 房源名称修改</span>
             </h1>
             <p class="text-xs text-gray-500 mt-0.5"> 完善行宽列宽，视觉上容纳更多信息。</p>
         </div>
@@ -424,6 +424,15 @@
                         <button onclick="deleteHouse('${house.id}')" class="text-gray-300 hover:text-rose-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                     </td>
                 </tr>`;
+        }
+
+        function updateHouseName(houseId, newName) {
+            const house = houses.find(h => h.id === houseId);
+            if (house) {
+                house.name = newName; // 更新内存中的数据
+                saveData();           // 必须调用这个！否则刷新页面就丢了
+                console.log('房源名称已更新并保存');
+            }
         }
 
         // 渲染单元格
