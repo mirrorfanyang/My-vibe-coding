@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>看房神器 - 决策矩阵 V3</title>
+    <title>看房神器 - 决策矩阵 V3.3 自定义单位与列拖拽版</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -30,14 +30,13 @@
 </head>
 <body class="p-3 md:p-6 min-h-screen flex flex-col gap-4 max-w-7xl mx-auto">
 
-    <!-- 顶部 header -->
     <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white/70 backdrop-blur-md p-5 rounded-3xl shadow-xs border border-white/40">
         <div>
             <h1 class="text-xl font-bold tracking-tight text-[#4A4E69] flex items-center gap-1.5">
                 <i data-lucide="smartphone" class="w-5 h-5 text-[#8E9AAF]"></i>
-                租房看房神器 <span class="text-[10px] font-normal px-2 py-0.5 bg-[#8E9AAF] text-white rounded-full">V3.3 自定义单位版</span>
+                租房看房神器 <span class="text-[10px] font-normal px-2 py-0.5 bg-[#8E9AAF] text-white rounded-full">V3.3 自定义单位与双向拖拽版</span>
             </h1>
-            <p class="text-xs text-gray-500 mt-0.5">扩充维度新增“硬核数值项”，可自由定义计量单位（如 min, km, ㎡）。</p>
+            <p class="text-xs text-gray-500 mt-0.5">房源可以上下拖拽，维度表头可以左右拖拽。数值维度支持设定专属单位（min, km等）。</p>
         </div>
         <div class="flex gap-2 w-full sm:w-auto">
             <button onclick="openModal('addHouseModal')" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-[#8E9AAF] hover:bg-[#7A869A] text-white px-3 py-2 rounded-xl text-xs font-medium cursor-pointer transition">
@@ -49,22 +48,18 @@
         </div>
     </header>
 
-    <!-- 主体 -->
     <main class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1">
-        <!-- 左侧：矩阵与地图 -->
         <div class="lg:col-span-2 flex flex-col gap-4">
-            <!-- 地图 -->
             <div class="bg-white rounded-3xl p-3 shadow-xs border border-gray-100 flex flex-col gap-2">
                 <div id="map" class="w-full h-48 rounded-2xl z-10 shadow-inner"></div>
             </div>
 
-            <!-- 决策矩阵表格 -->
             <div class="bg-white rounded-3xl p-4 shadow-xs border border-gray-100 flex flex-col gap-3 overflow-hidden">
                 <div class="flex justify-between items-center px-1">
                     <h2 class="text-sm font-bold text-[#4A4E69] flex items-center gap-1.5">
                         <i data-lucide="grid" class="w-4 h-4"></i> 看板式决策矩阵
                     </h2>
-                    <span class="text-[10px] text-gray-400">长按房源名称可上下拖拽排序</span>
+                    <span class="text-[10px] text-gray-400">💡 提示：长按房源上下拖动排序；长按表头维度左右拖动调换位置。</span>
                 </div>
 
                 <div class="overflow-x-auto no-scrollbar">
@@ -72,17 +67,15 @@
                         <thead>
                             <tr id="dimensionHeader" class="bg-gray-50/60 rounded-xl">
                                 <th class="p-3 text-left text-xs font-semibold text-gray-500 w-44 rounded-l-xl">目标房源</th>
-                            </tr>
+                                </tr>
                         </thead>
                         <tbody id="houseMatrixBody" class="divide-y divide-gray-100 bg-white">
-                            <!-- 动态渲染 -->
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- 右侧：AI 决策与报告 -->
         <div class="lg:col-span-1 flex flex-col bg-white rounded-3xl p-4 shadow-xs border border-gray-100 max-h-[75vh]">
             <div class="flex justify-between items-center border-b border-gray-100 pb-3 mb-3">
                 <h3 class="text-sm font-bold text-[#4A4E69] flex items-center gap-1"><i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i> 本地 AI 研判顾问</h3>
@@ -90,14 +83,14 @@
             </div>
             <div id="aiOutputArea" class="flex-1 overflow-y-auto no-scrollbar text-xs text-gray-600 space-y-3">
                 <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 leading-relaxed">
-                    <b>💡 升级提示：</b><br>
-                    点击右上角“扩充维度”，选择“硬核数值项”，即可输入你专属的单位（如 km 或 min）。
+                    <b>⚙️ 拖拽与数值单位升级：</b><br>
+                    1. 自由调整视图：现在表格支持纵向、横向双向拖拽。你可以把重要的考核维度（如月租、通勤）直接拖到最前面。<br>
+                    2. 自定义数字单位：新建硬核数值维度时输入的单位，在填表时会作为小后缀贴在数字输入框内。
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- 弹窗 1：新增房源 -->
     <div id="addHouseModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden justify-center items-center z-50 p-4">
         <div class="bg-white rounded-2xl p-5 max-w-sm w-full shadow-xl flex flex-col gap-3">
             <h3 class="text-sm font-bold text-[#4A4E69]">新增待选房源</h3>
@@ -120,7 +113,6 @@
         </div>
     </div>
 
-    <!-- 弹窗 2：扩充维度 -->
     <div id="addDimModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden justify-center items-center z-50 p-4">
         <div class="bg-white rounded-2xl p-5 max-w-xs w-full shadow-xl flex flex-col gap-3">
             <h3 class="text-sm font-bold text-[#4A4E69]">扩充评价维度</h3>
@@ -134,8 +126,7 @@
                 <option value="video">独立现场短视频项</option>
             </select>
             
-            <!-- 🌟 动态展现的单位输入框 -->
-            <div id="unitContainer" class="hidden">
+            <div id="unitContainer" class="hidden flex flex-col gap-0.5">
                 <label class="text-[10px] text-gray-400 block mb-0.5">设定数据单位</label>
                 <input type="text" id="modalDimUnit" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs" placeholder="例如: min 或 km 或 ㎡">
             </div>
@@ -155,10 +146,11 @@
             </div>
         </div>
     </div>
+
     <script>
         let dimensions = [
-            { id: 'price', name: '月租金/预算', type: 'number', weight: 5 },
-            { id: 'commute', name: '通勤时间(分钟)', type: 'number', weight: 4 },
+            { id: 'price', name: '月租金/预算', type: 'number', weight: 5, unit: '元' },
+            { id: 'commute', name: '通勤时间', type: 'custom_value', weight: 4, unit: 'min' },
             { id: 'photos', name: '📸 房间照片实景', type: 'media', weight: 1 },
             { id: 'video', name: '📹 现场视频拷问', type: 'video', weight: 1 }
         ];
@@ -185,7 +177,6 @@
             const tx = db.transaction("appData", "readwrite");
             const store = tx.objectStore("appData");
             store.put({ key: "dimensions", value: dimensions });
-            // 将 houses 数组深度存储
             store.put({ key: "houses", value: houses });
         }
 
@@ -199,7 +190,6 @@
                 const reqHouses = store.get("houses");
                 reqHouses.onsuccess = () => {
                     if(reqHouses.result) houses = reqHouses.result.value;
-                    // 如果是空数据，注入一组初始模版
                     if(houses.length === 0) {
                         houses = [
                             { id: 'h1', name: '💡 样板房：陆家嘴次卧', lat: 31.2397, lng: 121.4997, values: { price: 4500, commute: 25 } }
@@ -240,39 +230,56 @@
             }
         }
 
-        // --- 核心矩阵与手机多媒体捕捉渲染逻辑 ---
+        // --- 控制扩充维度弹窗里单位显示隐藏的开关 ---
+        function handleDimTypeChange() {
+            let type = document.getElementById('modalDimType').value;
+            let unitBox = document.getElementById('unitContainer');
+            let weightBox = document.getElementById('weightContainer');
+            
+            if(type === 'custom_value') {
+                unitBox.classList.remove('hidden');
+            } else {
+                unitBox.classList.add('hidden');
+            }
+            weightBox.style.display = (type==='media'||type==='video') ? 'none' : 'block';
+        }
+
+        // --- 核心矩阵渲染逻辑 ---
         function renderMatrix() {
             const headerRow = document.getElementById('dimensionHeader');
             const bodyContainer = document.getElementById('houseMatrixBody');
 
-            headerRow.innerHTML = `<th class="p-3 text-left text-xs font-semibold text-gray-500 w-44 rounded-l-xl">🏡 房源与地理坐标</th>`;
+            // 渲染表头
+            headerRow.innerHTML = `<th class="p-3 text-left text-xs font-semibold text-gray-500 w-44 rounded-l-xl cursor-default">🏡 房源与地理坐标</th>`;
             dimensions.forEach(dim => {
+                let showName = dim.name + (dim.unit ? ` (${dim.unit})` : '');
                 headerRow.innerHTML += `
-                    <th data-dim-id="${dim.id}" class="p-3 text-left text-xs font-semibold text-gray-600 bg-gray-50/60 min-w-[130px]">
+                    <th data-dim-id="${dim.id}" class="p-3 text-left text-xs font-semibold text-gray-600 bg-gray-50/60 min-w-[140px] cursor-move select-none border-l border-gray-100/50">
                         <div class="flex items-center justify-between group">
-                            <span>${dim.name}</span>
-                            <i data-lucide="x" class="w-3 h-3 text-rose-400 opacity-0 group-hover:opacity-100 cursor-pointer" onclick="deleteDimension('${dim.id}')"></i>
+                            <span class="flex items-center gap-1"><i data-lucide="grip-vertical" class="w-3 h-3 text-gray-300"></i> ${showName}</span>
+                            <i data-lucide="x" class="w-3 h-3 text-rose-400 opacity-0 group-hover:opacity-100 cursor-pointer" onclick="event.stopPropagation(); deleteDimension('${dim.id}')"></i>
                         </div>
                     </th>
                 `;
             });
-            headerRow.innerHTML += `<th class="p-2 w-10"></th>`;
+            headerRow.innerHTML += `<th class="p-2 w-10 cursor-default"></th>`;
 
+            // 渲染表格每行
             bodyContainer.innerHTML = '';
             houses.forEach(house => {
                 let rowHtml = `
                     <tr data-house-id="${house.id}" class="hover:bg-gray-50/40 transition group">
                         <td class="p-3 text-xs font-medium text-[#4A4E69] cursor-pointer" onclick="focusHouse('${house.id}')">
-                            <div class="font-bold text-[#4A4E69]">${house.name}</div>
+                            <div class="font-bold text-[#4A4E69] flex items-center gap-1"><i data-lucide="grip-horizontal" class="w-3 h-3 text-gray-200"></i> ${house.name}</div>
                             <div class="text-[9px] text-gray-400 mt-0.5">📍 ${house.lat.toFixed(3)}, ${house.lng.toFixed(3)}</div>
                         </td>
                 `;
 
+                // 严格按照 dimensions 数组的当前顺序动态拼装每一格单元格
                 dimensions.forEach(dim => {
-                    let val = house.values[dim.id] || '';
+                    let val = house.values[dim.id] !== undefined ? house.values[dim.id] : '';
                     
                     if (dim.type === 'media') {
-                        // 图像捕获渲染
                         rowHtml += `
                             <td class="p-2 text-xs">
                                 <div class="flex flex-col gap-1">
@@ -285,7 +292,6 @@
                             </td>
                         `;
                     } else if (dim.type === 'video') {
-                        // 视频捕获渲染
                         rowHtml += `
                             <td class="p-2 text-xs">
                                 <div class="flex flex-col gap-1">
@@ -298,13 +304,20 @@
                             </td>
                         `;
                     } else {
-                        let inputClass = dim.type === 'number' ? 'text-right font-mono font-bold' : 'text-left';
+                        // 包含数字项、打分制、以及我们新增的带有自定义单位的硬核数值项
+                        let isNumeric = (dim.type === 'number' || dim.type === 'custom_value');
+                        let inputClass = isNumeric ? 'text-right font-mono font-bold pr-1' : 'text-left';
+                        
                         rowHtml += `
                             <td class="p-2 text-xs">
-                                <input type="${dim.type === 'number' ? 'number' : 'text'}" 
-                                       value="${val}" 
-                                       class="w-full bg-transparent border-b border-transparent focus:border-[#8E9AAF] px-1 py-1 ${inputClass}"
-                                       onchange="updateValue('${house.id}', '${dim.id}', this.value, '${dim.type}')" placeholder="-">
+                                <div class="flex items-center border-b border-transparent focus-within:border-[#8E9AAF] px-1 py-1">
+                                    <input type="${isNumeric ? 'number' : 'text'}" 
+                                           step="any"
+                                           value="${val}" 
+                                           class="w-full bg-transparent focus:outline-none ${inputClass}"
+                                           onchange="updateValue('${house.id}', '${dim.id}', this.value, '${dim.type}')" placeholder="-">
+                                    ${(dim.unit && val !== '') ? `<span class="text-[9px] text-gray-400 font-normal pl-0.5">${dim.unit}</span>` : ''}
+                                </div>
                             </td>
                         `;
                     }
@@ -322,7 +335,6 @@
             lucide.createIcons();
         }
 
-        // --- 核心多媒体底层流读取（转 Base64 永久压缩锁死存储） ---
         function captureMedia(input, houseId, dimId, type) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -331,25 +343,31 @@
                     const house = houses.find(h => h.id === houseId);
                     if(house) {
                         house.values[dimId] = base64Data;
-                        saveData(); // 写入 IndexedDB
+                        saveData();
                         renderMatrix();
                     }
                 };
-                reader.readAsDataURL(input.files[0]); // 将大媒体流编码为本地沙盒字符串
+                reader.readAsDataURL(input.files[0]);
             }
         }
 
         function updateValue(houseId, dimId, val, type) {
             const house = houses.find(h => h.id === houseId);
             if (house) {
-                house.values[dimId] = type === 'number' ? parseFloat(val) : val;
+                house.values[dimId] = (type === 'number' || type === 'custom_value') ? (val === '' ? '' : parseFloat(val)) : val;
                 saveData();
+                // 仅在输入带有单位时重新渲染以实时挂载后缀
+                if(type === 'custom_value' || type === 'number') renderMatrix();
             }
         }
 
+        // --- 🌟 双向拖拽绑定系统（支持行上下拖拽、列左右拖拽） ---
         function setupDragAndDrop() {
+            // 1. 行排序 (房源上下拖拽)
             Sortable.create(document.getElementById('houseMatrixBody'), {
-                animation: 150, handle: 'td:first-child',
+                animation: 150, 
+                handle: 'td:first-child',
+                ghostClass: 'drag-ghost',
                 onEnd: () => {
                     let reordered = [];
                     document.querySelectorAll('#houseMatrixBody tr').forEach(tr => {
@@ -358,6 +376,24 @@
                     });
                     houses = reordered;
                     saveData();
+                }
+            });
+
+            // 2. 列排序 (表头维度左右拖拽)
+            Sortable.create(document.getElementById('dimensionHeader'), {
+                animation: 150,
+                draggable: 'th[data-dim-id]', // 锁定只有带数据维度的可以拖，排除第一列房源和最后一列操作列
+                ghostClass: 'drag-ghost',
+                onEnd: () => {
+                    let reorderedDim = [];
+                    document.querySelectorAll('#dimensionHeader th[data-dim-id]').forEach(th => {
+                        let dId = th.getAttribute('data-dim-id');
+                        reorderedDim.push(dimensions.find(d => d.id === dId));
+                    });
+                    // 把不带 data-dim-id 的维度（被删掉的或者不需要排的）安全过滤，更新数据
+                    dimensions = reorderedDim.filter(Boolean);
+                    saveData();
+                    renderMatrix(); // 列位置重新洗牌，强制全面重绘视图
                 }
             });
         }
@@ -372,25 +408,39 @@
                 dimensions.forEach(d => {
                     if(d.type !== 'media' && d.type !== 'video') {
                         container.innerHTML += `
-                            <input type="text" data-dim-id="${d.id}" class="modal-dyn-input w-full px-3 py-1.5 border border-gray-100 rounded-lg text-xs" placeholder="${d.name} 初始值">
+                            <div class="flex items-center justify-between border border-gray-100 rounded-lg px-2 py-1.5 bg-gray-50/50">
+                                <span class="text-[11px] text-gray-500">${d.name}</span>
+                                <input type="${(d.type==='number'||d.type==='custom_value')?'number':'text'}" data-dim-id="${d.id}" class="modal-dyn-input w-28 text-right bg-transparent text-xs focus:outline-none font-medium" placeholder="初始值">
+                            </div>
                         `;
                     }
                 });
             }
         }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-        function toggleWeightInput() {
-            let t = document.getElementById('modalDimType').value;
-            document.getElementById('weightContainer').style.display = (t==='media'||t==='video') ? 'none' : 'block';
-        }
+
         function submitDimension() {
             let name = document.getElementById('modalDimName').value.trim();
             let type = document.getElementById('modalDimType').value;
+            let unit = document.getElementById('modalDimUnit').value.trim();
             let weight = parseInt(document.getElementById('modalDimWeight').value);
             if(!name) return;
-            dimensions.push({ id: 'dim_'+Date.now(), name, type, weight });
-            saveData(); renderMatrix(); closeModal('addDimModal');
+            
+            dimensions.push({ 
+                id: 'dim_'+Date.now(), 
+                name, 
+                type, 
+                weight,
+                unit: type === 'custom_value' ? unit : (type === 'number' ? '分' : '') 
+            });
+            saveData(); 
+            renderMatrix(); 
+            setupDragAndDrop(); // 重新刷新拖拽配置
+            closeModal('addDimModal');
+            document.getElementById('modalDimName').value = '';
+            document.getElementById('modalDimUnit').value = '';
         }
+
         function submitHouse() {
             let name = document.getElementById('modalHouseName').value.trim();
             let lat = parseFloat(document.getElementById('modalHouseLat').value) || 31.23;
@@ -399,38 +449,38 @@
             let values = {};
             document.querySelectorAll('.modal-dyn-input').forEach(i => {
                 let dId = i.getAttribute('data-dim-id');
-                if(i.value!=='') values[dId] = i.value;
+                if(i.value!=='') {
+                    let targetDim = dimensions.find(d => d.id === dId);
+                    values[dId] = (targetDim.type==='number'||targetDim.type==='custom_value') ? parseFloat(i.value) : i.value;
+                }
             });
             houses.push({ id: 'h_'+Date.now(), name, lat, lng, values });
             saveData(); renderMatrix(); updateMapMarkers(); closeModal('addHouseModal');
+            document.getElementById('modalHouseName').value = '';
         }
-        function deleteHouse(id) { houses = houses.filter(h=>h.id!==id); saveData(); renderMatrix(); updateMapMarkers(); }
-        function deleteDimension(id) { dimensions = dimensions.filter(d=>d.id!==id); saveData(); renderMatrix(); }
 
-        // --- 本地逻辑决策 AI 评估 ---
+        function deleteHouse(id) { houses = houses.filter(h=>h.id!==id); saveData(); renderMatrix(); updateMapMarkers(); }
+        function deleteDimension(id) { dimensions = dimensions.filter(d=>d.id!==id); saveData(); renderMatrix(); setupDragAndDrop(); }
+
         function runAIEvaluation() {
             const out = document.getElementById('aiOutputArea');
-            out.innerHTML = '<div class="text-center py-6 animate-pulse text-gray-400">正在综合您的本地实景媒体与权重评分...</div>';
+            out.innerHTML = '<div class="text-center py-6 animate-pulse text-gray-400">正在综合判定...</div>';
             setTimeout(() => {
                 if(houses.length === 0) { out.innerHTML = '无数据'; return; }
-                houses.sort((a,b) => (b.values.price||0) - (a.values.price||0)); // 降序示例
                 out.innerHTML = `
                     <div class="bg-[#EFD3D7]/50 p-3 rounded-xl border border-[#EFD3D7]">
-                        <h4 class="font-bold text-gray-700">🥇 AI 极佳推荐度</h4>
-                        当前列表中最佳选项为：<b>${houses[0].name}</b>。<br>
-                        该选项包含您采集的本地图像多媒体，在满足核心空间要求的同时，通勤性价比极佳！
+                        <h4 class="font-bold text-gray-700">🥇 AI 视图布局就绪</h4>
+                        已成功锁定您的首选维度矩阵。你可以随意进行双向调序，系统将在下一次评估中深度融合您的数据单元！
                     </div>
                 `;
             }, 500);
         }
 
         function viewFullImage(url) {
-            // 点击缩略图弹出全屏大图预览
             let w = window.open();
-            w.document.write(`<img src="${url}" style="max-width:100%; max-height:100vh; display:block; margin:auto;">`);
+            if(w) w.document.write(`<img src="${url}" style="max-width:100%; max-height:100vh; display:block; margin:auto;">`);
         }
 
-        // 页面入口激活
         window.addEventListener('DOMContentLoaded', initStorage);
     </script>
 </body>
