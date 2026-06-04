@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>看房神器 - 决策矩阵 V3.7 导出预览版</title>
+    <title>看房神器 - 决策矩阵 V3.6.6 房源名称修改</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -48,25 +48,18 @@
         <div>
             <h1 class="text-xl font-bold tracking-tight text-[#4A4E69] flex items-center gap-1.5">
                 <i data-lucide="smartphone" class="w-5 h-5 text-[#8E9AAF]"></i>
-                租房看房神器 <span class="text-[10px] font-normal px-2 py-0.5 bg-[#4A4E69] text-white rounded-full">V3.7</span>
+                租房看房神器 <span class="text-[10px] font-normal px-2 py-0.5 bg-[#4A4E69] text-white rounded-full">V3.6.6 房源名称修改</span>
             </h1>
-            <p class="text-[10px] text-gray-400 mt-0.5"> 已优化视图布局，点击眼睛图标导出分享版。</p>
+            <p class="text-xs text-gray-500 mt-0.5"> 完善行宽列宽，视觉上容纳更多信息。</p>
         </div>
-
         <div class="flex gap-2 w-full sm:w-auto">
             <button onclick="openModal('addHouseModal')" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-[#8E9AAF] hover:bg-[#7A869A] text-white px-3 py-2 rounded-xl text-xs font-medium cursor-pointer transition">
-                <i data-lucide="home" class="w-3.5 h-3.5"></i> 新增
+                <i data-lucide="home" class="w-3.5 h-3.5"></i> 新增房源
             </button>
             <button onclick="openModal('addDimModal')" class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-[#CBC0D3] hover:bg-[#B8A9C3] text-[#4A4E69] px-3 py-2 rounded-xl text-xs font-medium cursor-pointer transition">
-                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> 维度
+                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> 扩充维度
             </button>
-
-            <div class="w-px bg-gray-200 mx-1"></div>
-
-            <button onclick="exportReadOnly()" class="flex-none flex items-center justify-center px-2 py-2 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 transition" title="导出只读分享版">
-                <i data-lucide="eye" class="w-4 h-4 text-amber-700"></i>
-            </button>
-
+            
             <button onclick="exportData()" class="flex-none flex items-center justify-center px-2 py-2 bg-white/50 border border-[#8E9AAF]/20 rounded-xl hover:bg-white transition" title="备份数据">
                 <i data-lucide="download" class="w-4 h-4 text-[#4A4E69]"></i>
             </button>
@@ -622,42 +615,6 @@
         function viewFullImage(url) {
             let w = window.open();
             if(w) w.document.write(`<img src="${url}" style="max-width:100%; max-height:100vh; display:block; margin:auto; background:#1a1a1a; padding:20px; box-sizing:border-box;">`);
-        }
-
-        function exportReadOnly() {
-            // 1. 克隆整个 body，避免修改原页面
-            const bodyClone = document.body.cloneNode(true);
-            
-            // 2. 移除所有交互组件（按钮、上传框、拖拽相关的标识）
-            const toRemove = bodyClone.querySelectorAll('button, input[type="file"], .drag-handle, i[data-lucide], .cursor-move');
-            toRemove.forEach(el => el.remove());
-            
-            // 3. 将所有输入框替换为纯文本
-            const inputs = bodyClone.querySelectorAll('input');
-            inputs.forEach(input => {
-                const span = document.createElement('span');
-                span.textContent = input.value;
-                span.className = "text-xs text-[#4A4E69] font-medium";
-                input.parentNode.replaceChild(span, input);
-            });
-
-            // 4. 生成只读 HTML (引入必要的 Tailwind 和 Lucide 以保持外观)
-            const htmlContent = `<!DOCTYPE html>
-            <html lang="zh-CN">
-            <head>
-                <meta charset="UTF-8">
-                <title>房源对比 - 只读预览版</title>
-                <script src="https://cdn.tailwindcss.com"></script>
-            </head>
-            <body class="p-6 bg-[#F4F3EF]">${bodyClone.innerHTML}</body>
-            </html>`;
-
-            // 5. 触发下载
-            const blob = new Blob([htmlContent], { type: 'text/html' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'house_view_readonly.html';
-            a.click();
         }
 
         window.addEventListener('DOMContentLoaded', initStorage);
